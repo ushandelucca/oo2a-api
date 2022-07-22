@@ -1,13 +1,13 @@
-# IDE files
-.vscode
+# Binaries
+MeasurementWeb
 
 # Binaries for programs and plugins
+
 *.exe
 *.dll
 *.so
 *.dylib
 debug
-weather
 
 # Test binary, build with `go test -c`
 *.test
