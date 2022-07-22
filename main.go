@@ -1,7 +1,7 @@
 package main
 
 import (
-	"PersonWeb/models"
+	"MeasurementWeb/models"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,12 +20,12 @@ func main() {
 	// API v1
 	v1 := r.Group("/api/v1")
 	{
-		v1.GET("person", getPersons)
-		v1.GET("person/:id", getPersonById)
-		v1.POST("person", addPerson)
-		v1.PUT("person/:id", updatePerson)
-		v1.DELETE("person/:id", deletePerson)
-		v1.OPTIONS("person", options)
+		v1.GET("measurement", getMeasurements)
+		v1.GET("measurement/:id", getMeasurementById)
+		v1.POST("measurement", addMeasurement)
+		v1.PUT("measurement/:id", updateMeasurement)
+		v1.DELETE("measurement/:id", deleteMeasurement)
+		v1.OPTIONS("measurement", options)
 	}
 
 	// By default it serves on :8080 unless a
@@ -33,47 +33,47 @@ func main() {
 	r.Run()
 }
 
-func getPersons(c *gin.Context) {
+func getMeasurements(c *gin.Context) {
 
-	persons, err := models.GetPersons(10)
+	measurements, err := models.GetMeasurements(10)
 
 	checkErr(err)
 
-	if persons == nil {
+	if measurements == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No Records Found"})
 		return
 	} else {
-		c.JSON(http.StatusOK, gin.H{"data": persons})
+		c.JSON(http.StatusOK, gin.H{"data": measurements})
 	}
 }
 
-func getPersonById(c *gin.Context) {
+func getMeasurementById(c *gin.Context) {
 
 	// grab the Id of the record want to retrieve
 	id := c.Param("id")
 
-	person, err := models.GetPersonById(id)
+	measurement, err := models.GetMeasurementById(id)
 
 	checkErr(err)
-	// if the name is blank we can assume nothing is found
-	if person.FirstName == "" {
+	// if the timestamp is blank we can assume nothing is found
+	if measurement.Timestamp == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No Records Found"})
 		return
 	} else {
-		c.JSON(http.StatusOK, gin.H{"data": person})
+		c.JSON(http.StatusOK, gin.H{"data": measurement})
 	}
 }
 
-func addPerson(c *gin.Context) {
+func addMeasurement(c *gin.Context) {
 
-	var json models.Person
+	var json models.Measurement
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	success, err := models.AddPerson(json)
+	success, err := models.AddMeasurement(json)
 
 	if success {
 		c.JSON(http.StatusOK, gin.H{"message": "Success"})
@@ -82,24 +82,24 @@ func addPerson(c *gin.Context) {
 	}
 }
 
-func updatePerson(c *gin.Context) {
+func updateMeasurement(c *gin.Context) {
 
-	var json models.Person
+	var json models.Measurement
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	personId, err := strconv.Atoi(c.Param("id"))
+	measurementId, err := strconv.Atoi(c.Param("id"))
 
-	fmt.Printf("Updating id %d", personId)
+	fmt.Printf("Updating id %d", measurementId)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	success, err := models.UpdatePerson(json, personId)
+	success, err := models.UpdateMeasurement(json, measurementId)
 
 	if success {
 		c.JSON(http.StatusOK, gin.H{"message": "Success"})
@@ -108,15 +108,15 @@ func updatePerson(c *gin.Context) {
 	}
 }
 
-func deletePerson(c *gin.Context) {
+func deleteMeasurement(c *gin.Context) {
 
-	personId, err := strconv.Atoi(c.Param("id"))
+	measurementId, err := strconv.Atoi(c.Param("id"))
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	success, err := models.DeletePerson(personId)
+	success, err := models.DeleteMeasurement(measurementId)
 
 	if success {
 		c.JSON(http.StatusOK, gin.H{"message": "Success"})

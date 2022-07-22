@@ -1,6 +1,39 @@
-# PersonWeb
+goMeasurement
+=============
+:toc: preamble
 
-This is a sample Go Web API built with [Gin](https://github.com/gin-gonic/gin) and connecting to a [SQLite database](https://www.sqlite.org/index.html)
+This is a sample Go Web API built with https://github.com/gin-gonic/gin[Gin] and connecting to a https://www.sqlite.org/index.html[SQLite database]
 
-This was built for a tutorial, [Building a Web App with Go and SQLite](https://www.allhandsontech.com/programming/golang/web-app-sqlite-go/) one of the many tutorials on [All Hands on Tech](https://www.allhandsontech.com). 
+This was built for a tutorial, https://www.allhandsontech.com/programming/golang/web-app-sqlite-go/[Building a Web App with Go and SQLite] one of the many tutorials on https://www.allhandsontech.com[All Hands on Tech]. 
 
+[plantuml]
+....
+@startuml
+
+node nod {
+}
+
+vertical -- [comp]
+horizontal - [comp]
+
+@enduml
+....
+
+Guides
+------
+
+* Implementation: https://www.allhandsontech.com/programming/golang/web-app-sqlite-go/
+* Testing with gin framework: https://chenyitian.gitbooks.io/gin-web-framework/content/docs/39.html
+* Generate SWAGGER Files: https://levelup.gitconnected.com/tutorial-generate-swagger-specification-and-swaggerui-for-gin-go-web-framework-9f0c038483b5
+* http://localhost:8080/api/v1/measurement
+
+Test
+----
+
+* http://localhost:8080/api/v1/measurement
+
+
+To-Do
+-----
+
+* Add Swagger annotations
