@@ -36,4 +36,19 @@ Test
 To-Do
 -----
 
+. https: //markphelps.me/posts/writing-tests-for-your-database-code-in-go/
+* Implement the storage test cases 
+* Storage config in "measurement" initialize it with test db 
+* Using the test config for test_db.go
+* remove the models package
+
+. Create the service layer with the business logic
+* ID creation
+* Validation 
+
+. Create the API layer with gin -> main.go
 * Add Swagger annotations
+
+. Add the static content 
+
+. Create an cmd with logging, ...

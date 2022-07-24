@@ -117,7 +117,7 @@ func UpdateMeasurement(ourMeasurement Measurement, id int) (bool, error) {
 		return false, err
 	}
 
-	stmt, err := tx.Prepare("UPDATE people SET first_name = ?, last_name = ?, email = ?, ip_address = ? WHERE Id = ?")
+	stmt, err := tx.Prepare("UPDATE measurements SET Timestamp = ?, Sensor = ?, Value = ?, Unit = ? WHERE ID = ?")
 
 	if err != nil {
 		return false, err
@@ -144,7 +144,7 @@ func DeleteMeasurement(personId int) (bool, error) {
 		return false, err
 	}
 
-	stmt, err := DB.Prepare("DELETE from people where id = ?")
+	stmt, err := DB.Prepare("DELETE from measurements where id = ?")
 
 	if err != nil {
 		return false, err
