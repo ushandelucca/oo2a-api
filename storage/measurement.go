@@ -35,6 +35,9 @@ func NewMeasurementStore(db *sql.DB) *measurementStore {
 }
 
 func (s *measurementStore) SetupMeasurements(ctx context.Context, m Measurement) (err error) {
+	// use config 
+	// create db file and or tables
+	
 	return nil
 }
 
