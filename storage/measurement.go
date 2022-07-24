@@ -17,7 +17,8 @@ type Measurement struct {
 
 // 'new' exported MeasurementStore interface that can be mocked
 type MeasurementStore interface {
-	InsertMeasurement(context.Context, *Measurement) error
+	SetupMeasurements(context.Context, Measurement) error
+	InsertMeasurement(context.Context, Measurement) error
 	// ....
 }
 
@@ -31,6 +32,10 @@ func NewMeasurementStore(db *sql.DB) *measurementStore {
 	return &measurementStore{
 		db: db,
 	}
+}
+
+func (s *measurementStore) SetupMeasurements(ctx context.Context, m Measurement) (err error) {
+	return nil
 }
 
 func (s *measurementStore) InsertMeasurement(ctx context.Context, m Measurement) (entity Measurement, err error) {
