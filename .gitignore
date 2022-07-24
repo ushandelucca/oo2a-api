@@ -2,12 +2,14 @@
 MeasurementWeb
 
 # Binaries for programs and plugins
-
 *.exe
 *.dll
 *.so
 *.dylib
 debug
+
+# DB files 
+*.db
 
 # Test binary, build with `go test -c`
 *.test

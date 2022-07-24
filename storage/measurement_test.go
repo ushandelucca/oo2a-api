@@ -1,8 +1,6 @@
-// Package storage implements the db access for the CRUD operations.
 package storage
 
 import (
-	"context"
 	"testing"
 
 	// using https://github.com/stretchr/testify library for brevity
@@ -10,14 +8,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestSetupMeasurements(t *testing.T) {
+
+	// expecting existing table
+	// drop table
+	// -> select error
+	// setup
+	// -> select empty
+
+}
+
 func TestInsertMeasurement(t *testing.T) {
 	store := &measurementStore{
 		db: testDB.db,
 	}
 
-	object := Measurement{ID: "", Timestamp: ""}
+	object := Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}
 
-	entity, err := store.InsertMeasurement(context.TODO(), object)
+	err := store.SetupMeasurements()
+	entity, err := store.CreateMeasurement(object)
 
 	require.NoError(t, err)
 

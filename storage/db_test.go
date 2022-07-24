@@ -45,6 +45,7 @@ func run(m *testing.M) (code int, err error) {
 	defer func() {
 		for _, t := range []string{"measurements"} {
 			_, _ = testDB.db.Exec(fmt.Sprintf("DELETE FROM %s", t))
+			// _, _ = testDB.db.Exec(fmt.Sprintf("DROP TABLE %s", t))
 		}
 
 		testDB.db.Close()

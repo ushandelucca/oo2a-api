@@ -1,9 +1,12 @@
+// Package storage implements the db access for the CRUD operations.
 package storage
 
 import (
-	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+
+	"github.com/teris-io/shortid"
 )
 
 // Measurement is the transport object for the values
@@ -17,9 +20,11 @@ type Measurement struct {
 
 // 'new' exported MeasurementStore interface that can be mocked
 type MeasurementStore interface {
-	SetupMeasurements(context.Context, Measurement) error
-	InsertMeasurement(context.Context, Measurement) error
-	// ....
+	SetupMeasurements() error
+	CreateMeasurement(Measurement) (Measurement error)
+	ReadMeasurement(string) (Measurement error)
+	UpdateMeasurement(Measurement) (Measurement error)
+	DeleteMeasurement(string) error
 }
 
 // unexported SQL implementation
@@ -34,28 +39,170 @@ func NewMeasurementStore(db *sql.DB) *measurementStore {
 	}
 }
 
-func (s *measurementStore) SetupMeasurements(ctx context.Context, m Measurement) (err error) {
-	// use config 
+func (s *measurementStore) SetupMeasurements() (err error) {
+	const sql = "CREATE TABLE \"measurements\" ( \"ID\" TEXT UNIQUE, \"Timestamp\" TEXT, \"Sensor\" TEXT, \"Value\" NUMERIC, \"Unit\" TEXT, PRIMARY KEY(\"ID\") )"
+
+	// use config
 	// create db file and or tables
-	
+
+	tx, e := s.db.Begin()
+
+	if e != nil {
+		err = fmt.Errorf("could not begin transaction: %w", e)
+		return err
+	}
+
+	stmt, e := tx.Prepare(sql)
+
+	if e != nil {
+		err = fmt.Errorf("could not prepare transaction: %w", e)
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, e = stmt.Exec()
+
+	if e != nil {
+		err = fmt.Errorf("could not execute statement: %w", e)
+		return err
+	}
+
+	e = tx.Commit()
+
+	if e != nil {
+		err = fmt.Errorf("could not commit transaction: %w", e)
+		return err
+	}
+
 	return nil
 }
 
-func (s *measurementStore) InsertMeasurement(ctx context.Context, m Measurement) (entity Measurement, err error) {
-	const stmt = "INSERT INTO measurements (ID, Timestamp, Sensor, Value, Unit) VALUES (?, ?, ?, ?, ?)"
-
-	result, e := s.db.ExecContext(ctx, stmt, m.ID, m.Timestamp, m.Sensor, m.Value, m.Unit)
-	if err != nil {
-		e = fmt.Errorf("could not insert row: %w", err)
-	}
-
-	if _, e = result.RowsAffected(); err != nil {
-		e = fmt.Errorf("could not get affected rows: %w", err)
-	}
+func (s *measurementStore) executeTx(sql string, m Measurement) (err error) {
+	tx, e := s.db.Begin()
 
 	if e != nil {
-		return m, err
+		err = fmt.Errorf("could not begin transaction: %w", e)
+		return err
 	}
 
-	return entity, nil
+	stmt, e := tx.Prepare(sql)
+
+	if e != nil {
+		err = fmt.Errorf("could not prepare transaction: %w", e)
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, e = stmt.Exec(m.ID, m.Timestamp, m.Sensor, m.Value, m.Unit)
+
+	if e != nil {
+		err = fmt.Errorf("could not execute statement: %w", e)
+		return err
+	}
+
+	e = tx.Commit()
+
+	if e != nil {
+		err = fmt.Errorf("could not commit transaction: %w", e)
+		return err
+	}
+
+	return nil
+}
+
+func (s *measurementStore) CreateMeasurement(m Measurement) (entity Measurement, err error) {
+	const sql = "INSERT INTO measurements (ID, Timestamp, Sensor, Value, Unit) VALUES (?, ?, ?, ?, ?)"
+
+	if m.ID != "" {
+		err = errors.New("for insert ID must be empty")
+		return Measurement{}, err
+	}
+
+	var e error
+	m.ID, e = shortid.Generate()
+
+	if e != nil {
+		err = fmt.Errorf("could not generate id: %w", e)
+		return Measurement{}, err
+	}
+
+	e = s.executeTx(sql, m)
+
+	if e != nil {
+		err = fmt.Errorf("insert: %w", e)
+		return Measurement{}, err
+	}
+
+	return m, nil
+}
+
+func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err error) {
+	stmt, err := s.db.Prepare("SELECT ID, Timestamp, Sensor, Value, Unit from measurements WHERE ID = ?")
+
+	if err != nil {
+		return Measurement{}, err
+	}
+
+	measurement := Measurement{}
+
+	e := stmt.QueryRow(id).Scan(&measurement.ID, &measurement.Timestamp, &measurement.Sensor, &measurement.Value, &measurement.Unit)
+
+	if e != nil {
+		if e == sql.ErrNoRows {
+			return Measurement{}, nil
+		}
+		err = fmt.Errorf("could not query: %w", e)
+		return Measurement{}, err
+	}
+
+	return measurement, nil
+}
+
+func (s *measurementStore) UpdateMeasurement(m Measurement) (entity Measurement, err error) {
+	const sql = "UPDATE measurements SET Timestamp = ?, Sensor = ?, Value = ?, Unit = ? WHERE ID = ?)"
+
+	e := s.executeTx(sql, m)
+
+	if e != nil {
+		err = fmt.Errorf("update: %w", e)
+		return Measurement{}, err
+	}
+
+	return m, nil
+}
+
+func (s *measurementStore) DeleteMeasurements(id string) (err error) {
+	tx, e := s.db.Begin()
+
+	if e != nil {
+		err = fmt.Errorf("could not begin transaction: %w", e)
+		return err
+	}
+
+	stmt, e := tx.Prepare("DELETE from measurements where id = ?")
+
+	if e != nil {
+		err = fmt.Errorf("could not prepare transaction: %w", e)
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, e = stmt.Exec(id)
+
+	if e != nil {
+		err = fmt.Errorf("could not execute statement: %w", e)
+		return err
+	}
+
+	e = tx.Commit()
+
+	if e != nil {
+		err = fmt.Errorf("could not commit transaction: %w", e)
+		return err
+	}
+
+	return nil
 }
