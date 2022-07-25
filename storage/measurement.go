@@ -18,13 +18,15 @@ type Measurement struct {
 	Unit      string  `json:"unit"`
 }
 
+var emptyMeasurement = Measurement{}
+
 // 'new' exported MeasurementStore interface that can be mocked
 type MeasurementStore interface {
-	SetupMeasurements() error
-	CreateMeasurement(Measurement) (Measurement error)
-	ReadMeasurement(string) (Measurement error)
-	UpdateMeasurement(Measurement) (Measurement error)
-	DeleteMeasurement(string) error
+	SetupMeasurements() (err error)
+	CreateMeasurement(m Measurement) (entity Measurement, err error)
+	ReadMeasurement(id string) (Measurement error)
+	UpdateMeasurement(m Measurement) (entity Measurement, err error)
+	DeleteMeasurement(id string) (err error)
 }
 
 // unexported SQL implementation
@@ -43,7 +45,12 @@ func (s *measurementStore) SetupMeasurements() (err error) {
 	const sql = "CREATE TABLE \"measurements\" ( \"ID\" TEXT UNIQUE, \"Timestamp\" TEXT, \"Sensor\" TEXT, \"Value\" NUMERIC, \"Unit\" TEXT, PRIMARY KEY(\"ID\") )"
 
 	// use config
-	// create db file and or tables
+
+	// exit if table already exits
+	_, e := s.db.Exec("SELECT * FROM measurements LIMIT 1")
+	if e == nil {
+		return nil
+	}
 
 	tx, e := s.db.Begin()
 
@@ -116,8 +123,8 @@ func (s *measurementStore) CreateMeasurement(m Measurement) (entity Measurement,
 	const sql = "INSERT INTO measurements (ID, Timestamp, Sensor, Value, Unit) VALUES (?, ?, ?, ?, ?)"
 
 	if m.ID != "" {
-		err = errors.New("for insert ID must be empty")
-		return Measurement{}, err
+		err = errors.New("the ID must be empty")
+		return emptyMeasurement, err
 	}
 
 	var e error
@@ -125,14 +132,14 @@ func (s *measurementStore) CreateMeasurement(m Measurement) (entity Measurement,
 
 	if e != nil {
 		err = fmt.Errorf("could not generate id: %w", e)
-		return Measurement{}, err
+		return emptyMeasurement, err
 	}
 
 	e = s.executeTx(sql, m)
 
 	if e != nil {
 		err = fmt.Errorf("insert: %w", e)
-		return Measurement{}, err
+		return emptyMeasurement, err
 	}
 
 	return m, nil
@@ -142,19 +149,19 @@ func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err e
 	stmt, err := s.db.Prepare("SELECT ID, Timestamp, Sensor, Value, Unit from measurements WHERE ID = ?")
 
 	if err != nil {
-		return Measurement{}, err
+		return emptyMeasurement, err
 	}
 
-	measurement := Measurement{}
+	measurement := emptyMeasurement
 
 	e := stmt.QueryRow(id).Scan(&measurement.ID, &measurement.Timestamp, &measurement.Sensor, &measurement.Value, &measurement.Unit)
 
 	if e != nil {
 		if e == sql.ErrNoRows {
-			return Measurement{}, nil
+			return emptyMeasurement, nil
 		}
 		err = fmt.Errorf("could not query: %w", e)
-		return Measurement{}, err
+		return emptyMeasurement, err
 	}
 
 	return measurement, nil
@@ -167,7 +174,7 @@ func (s *measurementStore) UpdateMeasurement(m Measurement) (entity Measurement,
 
 	if e != nil {
 		err = fmt.Errorf("update: %w", e)
-		return Measurement{}, err
+		return emptyMeasurement, err
 	}
 
 	return m, nil

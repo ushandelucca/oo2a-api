@@ -3,36 +3,59 @@ package storage
 import (
 	"testing"
 
-	// using https://github.com/stretchr/testify library for brevity
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSetupMeasurements(t *testing.T) {
-
-	// expecting existing table
-	// drop table
-	// -> select error
-	// setup
-	// -> select empty
-
-}
-
-func TestInsertMeasurement(t *testing.T) {
-	store := &measurementStore{
-		db: testDB.db,
-	}
-
-	object := Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}
-
-	err := store.SetupMeasurements()
-	entity, err := store.CreateMeasurement(object)
-
+	// expecting the existing table
+	_, err := testStore.db.Exec("SELECT * FROM measurements LIMIT 1")
+	require.NoError(t, err)
+	err = testStore.SetupMeasurements()
 	require.NoError(t, err)
 
-	assert.Equal(t, "t1", entity.Timestamp)
-	assert.Equal(t, "s1", entity.Sensor)
-	assert.Equal(t, 1.3, entity.Value)
-	assert.Equal(t, "%", entity.Unit)
-	assert.NotZero(t, entity.ID)
+	// drop table
+	_, _ = testStore.db.Exec("DROP TABLE measurements")
+	_, err = testStore.db.Exec("SELECT * FROM measurements LIMIT 1")
+	require.Error(t, err)
+
+	// create table
+	err = testStore.SetupMeasurements()
+	require.NoError(t, err)
+
+	// check table
+	_, err = testStore.db.Exec("SELECT * FROM measurements LIMIT 1")
+	require.NoError(t, err)
+}
+
+var createMeasurementTestCases = []struct {
+	description         string
+	measurement         Measurement
+	expectedMeasurement Measurement
+	expectErr           bool
+}{
+	{"simple", Measurement{ID: "", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
+	{"error when id", Measurement{ID: "id1", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, true},
+}
+
+func TestCreatMeasurement(t *testing.T) {
+	var actual Measurement
+	var err error
+
+	for _, tc := range createMeasurementTestCases {
+		actual, err = testStore.CreateMeasurement(tc.measurement)
+
+		if tc.expectErr {
+			assert.Error(t, err)
+			assert.Equal(t, emptyMeasurement, actual)
+
+		} else {
+			assert.NoError(t, err)
+			assert.NotZero(t, actual.ID)
+			assert.Equal(t, tc.expectedMeasurement.Timestamp, actual.Timestamp)
+			assert.Equal(t, tc.expectedMeasurement.Sensor, actual.Sensor)
+			assert.Equal(t, tc.expectedMeasurement.Value, actual.Value)
+			assert.Equal(t, tc.expectedMeasurement.Unit, actual.Unit)
+		}
+	}
 }
