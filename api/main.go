@@ -1,7 +1,6 @@
-package main
+package api
 
 import (
-	"MeasurementWeb/models"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 
 func main() {
 
-	err := models.ConnectDatabase()
+	err := ConnectDatabase()
 	checkErr(err)
 
 	r := gin.Default()
@@ -35,7 +34,7 @@ func main() {
 
 func getMeasurements(c *gin.Context) {
 
-	measurements, err := models.GetMeasurements(10)
+	measurements, err := GetMeasurements(10)
 
 	checkErr(err)
 
@@ -52,7 +51,7 @@ func getMeasurementById(c *gin.Context) {
 	// grab the Id of the record want to retrieve
 	id := c.Param("id")
 
-	measurement, err := models.GetMeasurementById(id)
+	measurement, err := GetMeasurementById(id)
 
 	checkErr(err)
 	// if the timestamp is blank we can assume nothing is found
@@ -66,14 +65,14 @@ func getMeasurementById(c *gin.Context) {
 
 func addMeasurement(c *gin.Context) {
 
-	var json models.Measurement
+	var json Measurement
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	success, err := models.AddMeasurement(json)
+	success, err := AddMeasurement(json)
 
 	if success {
 		c.JSON(http.StatusOK, gin.H{"message": "Success"})
@@ -84,7 +83,7 @@ func addMeasurement(c *gin.Context) {
 
 func updateMeasurement(c *gin.Context) {
 
-	var json models.Measurement
+	var json Measurement
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -99,7 +98,7 @@ func updateMeasurement(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	success, err := models.UpdateMeasurement(json, measurementId)
+	success, err := UpdateMeasurement(json, measurementId)
 
 	if success {
 		c.JSON(http.StatusOK, gin.H{"message": "Success"})
@@ -116,7 +115,7 @@ func deleteMeasurement(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 	}
 
-	success, err := models.DeleteMeasurement(measurementId)
+	success, err := DeleteMeasurement(measurementId)
 
 	if success {
 		c.JSON(http.StatusOK, gin.H{"message": "Success"})
