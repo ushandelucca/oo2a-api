@@ -29,16 +29,16 @@ type MeasurementStore interface {
 	DeleteMeasurement(id string) (err error)
 }
 
-// unexported SQL implementation
-type measurementStore struct {
-	db *sql.DB
-}
-
 // exported 'constructor'
 func NewMeasurementStore(db *sql.DB) *measurementStore {
 	return &measurementStore{
 		db: db,
 	}
+}
+
+// unexported SQL implementation
+type measurementStore struct {
+	db *sql.DB
 }
 
 func (s *measurementStore) SetupMeasurements() (err error) {
