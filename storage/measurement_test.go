@@ -32,7 +32,7 @@ var createMeasurementTestCases = []struct {
 	description         string
 	measurement         Measurement
 	expectedMeasurement Measurement
-	expectErr           bool
+	expectError         bool
 }{
 	{"simple", Measurement{ID: "", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
 	{"error when id", Measurement{ID: "id1", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, true},
@@ -45,10 +45,9 @@ func TestCreatMeasurement(t *testing.T) {
 	for _, tc := range createMeasurementTestCases {
 		actual, err = testStore.CreateMeasurement(tc.measurement)
 
-		if tc.expectErr {
+		if tc.expectError {
 			assert.Error(t, err)
 			assert.Equal(t, emptyMeasurement, actual)
-
 		} else {
 			assert.NoError(t, err)
 			assert.NotZero(t, actual.ID)
