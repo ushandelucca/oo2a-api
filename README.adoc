@@ -36,7 +36,7 @@ Test
 To-Do
 -----
 
-. https: //markphelps.me/posts/writing-tests-for-your-database-code-in-go/
+. https://markphelps.me/posts/writing-tests-for-your-database-code-in-go/
 * Implement the storage test cases 
 * Storage config in "measurement" initialize it with test db 
 * Using the test config for test_db.go

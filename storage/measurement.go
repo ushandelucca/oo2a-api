@@ -24,7 +24,7 @@ var emptyMeasurement = Measurement{}
 type MeasurementStore interface {
 	SetupMeasurements() (err error)
 	CreateMeasurement(m Measurement) (entity Measurement, err error)
-	ReadMeasurement(id string) (Measurement error)
+	ReadMeasurement(id string) (entity Measurement, err error)
 	UpdateMeasurement(m Measurement) (entity Measurement, err error)
 	DeleteMeasurement(id string) (err error)
 }
@@ -180,7 +180,7 @@ func (s *measurementStore) UpdateMeasurement(m Measurement) (entity Measurement,
 	return m, nil
 }
 
-func (s *measurementStore) DeleteMeasurements(id string) (err error) {
+func (s *measurementStore) DeleteMeasurement(id string) (err error) {
 	tx, e := s.db.Begin()
 
 	if e != nil {
