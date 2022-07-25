@@ -20,8 +20,9 @@ type Measurement struct {
 
 var emptyMeasurement = Measurement{}
 
-// 'new' exported MeasurementStore interface that can be mocked
+// MeasurementStore provides the CRUD storage functionality.
 type MeasurementStore interface {
+	// SetupMeasurements creates the database and the tables.
 	SetupMeasurements() (err error)
 	CreateMeasurement(m Measurement) (entity Measurement, err error)
 	ReadMeasurement(id string) (entity Measurement, err error)
