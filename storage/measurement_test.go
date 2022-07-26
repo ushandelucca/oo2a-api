@@ -58,3 +58,93 @@ func TestCreatMeasurement(t *testing.T) {
 		}
 	}
 }
+
+var readDeleteTestCases = []struct {
+	description string
+	valueObject Measurement
+	expectError bool
+}{
+	{"simple", Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
+	{"simple", Measurement{Timestamp: "t2", Sensor: "s1", Value: 2.1, Unit: "%"}, false},
+}
+
+func TestReadMeasurement(t *testing.T) {
+	var entity Measurement
+	var actual Measurement
+	var err error
+
+	for _, tc := range readDeleteTestCases {
+		entity, err = testStore.CreateMeasurement(tc.valueObject)
+		require.NoError(t, err)
+
+		actual, err = testStore.ReadMeasurement(entity.ID)
+
+		if tc.expectError {
+			assert.Error(t, err)
+			assert.Equal(t, emptyMeasurement, entity)
+		} else {
+			assert.NoError(t, err)
+			assert.NotZero(t, actual.ID)
+			assert.Equal(t, actual.Timestamp, entity.Timestamp)
+			assert.Equal(t, actual.Sensor, entity.Sensor)
+			assert.Equal(t, actual.Value, entity.Value)
+			assert.Equal(t, actual.Unit, entity.Unit)
+		}
+	}
+}
+
+func TestDeleteMeasurement(t *testing.T) {
+	var entity Measurement
+	var err error
+
+	for _, tc := range readDeleteTestCases {
+		entity, err = testStore.CreateMeasurement(tc.valueObject)
+		require.NoError(t, err)
+		require.NotZero(t, entity.ID)
+
+		err = testStore.DeleteMeasurement(entity.ID)
+
+		if tc.expectError {
+			assert.Error(t, err)
+		} else {
+			assert.NoError(t, err)
+		}
+	}
+}
+
+var updateMeasurementTestCases = []struct {
+	description        string
+	measurement        Measurement
+	updatedMeasurement Measurement
+	expectError        bool
+}{
+	{"simple", Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.1, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.2, Unit: "%"}, false},
+	{"error when id", Measurement{Timestamp: "t1", Sensor: "s1", Value: 2.1, Unit: "%"}, Measurement{Timestamp: "t1.1", Sensor: "s1", Value: 2.2, Unit: "%"}, false},
+}
+
+func TestUpdateMeasurement(t *testing.T) {
+	var entity Measurement
+	var actual Measurement
+	var err error
+
+	for _, tc := range updateMeasurementTestCases {
+		entity, err = testStore.CreateMeasurement(tc.measurement)
+		require.NoError(t, err)
+
+		tc.updatedMeasurement.ID = entity.ID
+
+		actual, err = testStore.UpdateMeasurement(tc.updatedMeasurement)
+
+		if tc.expectError {
+			assert.Error(t, err)
+			assert.Equal(t, emptyMeasurement, entity)
+		} else {
+			assert.NoError(t, err)
+			assert.Equal(t, actual.ID, tc.updatedMeasurement.ID)
+			assert.Equal(t, actual.Timestamp, tc.updatedMeasurement.Timestamp)
+			assert.Equal(t, actual.Sensor, tc.updatedMeasurement.Sensor)
+			assert.Equal(t, actual.Value, tc.updatedMeasurement.Value)
+			assert.Equal(t, actual.Unit, tc.updatedMeasurement.Unit)
+		}
+	}
+}

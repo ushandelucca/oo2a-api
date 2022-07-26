@@ -24,6 +24,9 @@ var emptyMeasurement = Measurement{}
 type MeasurementStore interface {
 	// SetupMeasurements creates the database and the tables.
 	SetupMeasurements() (err error)
+
+	// CreateMeasurement adds a new measurement to the table. The ID must be empty and
+	// will be defined within this function.
 	CreateMeasurement(m Measurement) (entity Measurement, err error)
 	ReadMeasurement(id string) (entity Measurement, err error)
 	UpdateMeasurement(m Measurement) (entity Measurement, err error)
@@ -169,7 +172,7 @@ func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err e
 }
 
 func (s *measurementStore) UpdateMeasurement(m Measurement) (entity Measurement, err error) {
-	const sql = "UPDATE measurements SET Timestamp = ?, Sensor = ?, Value = ?, Unit = ? WHERE ID = ?)"
+	const sql = "UPDATE measurements SET Timestamp = ?, Sensor = ?, Value = ?, Unit = ? WHERE ID = ?"
 
 	e := s.executeTx(sql, m)
 
