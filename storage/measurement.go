@@ -28,6 +28,8 @@ type MeasurementStore interface {
 	// CreateMeasurement adds a new measurement to the table. The ID must be empty and
 	// will be defined within this function.
 	CreateMeasurement(m Measurement) (entity Measurement, err error)
+
+	// ReadMeasurement reads an measurement
 	ReadMeasurement(id string) (entity Measurement, err error)
 	UpdateMeasurement(m Measurement) (entity Measurement, err error)
 	DeleteMeasurement(id string) (err error)
