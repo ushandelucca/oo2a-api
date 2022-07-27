@@ -1,5 +1,5 @@
-// Package storage implements the db access for the CRUD operations.
-package storage
+// Package database implements the db access for the CRUD operations.
+package database
 
 import (
 	"database/sql"

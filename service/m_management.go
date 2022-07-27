@@ -2,27 +2,27 @@
 package service
 
 import (
-	"MeasurementWeb/storage"
+	"MeasurementWeb/database"
 	"fmt"
 )
 
 type ManagementService interface {
 	InitMeasurement() (err error)
-	UpsertMeasurement(m storage.Measurement) (entity storage.Measurement, err error)
+	UpsertMeasurement(m database.Measurement) (entity database.Measurement, err error)
 	DeleteMeasurement(id string) (err error)
 }
 
 // exported 'constructor'
 func NewManagementService() *managementService {
 	// ---------------------config---vvv
-	s := storage.NewMeasurementStore(nil)
+	s := database.NewMeasurementStore(nil)
 
 	return &managementService{store: s}
 }
 
 // managementService relies on the MeasurementStore -> mockable for the tests without DB
 type managementService struct {
-	store storage.MeasurementStore
+	store database.MeasurementStore
 }
 
 func (s *managementService) InitMeasurement() (err error) {
@@ -30,11 +30,11 @@ func (s *managementService) InitMeasurement() (err error) {
 	return err
 }
 
-func (s *managementService) UpsertMeasurement(m storage.Measurement) (err error) {
+func (s *managementService) UpsertMeasurement(m database.Measurement) (err error) {
 	// do validation/business rule validation here
 	// finally, insert into the DB
 
-	var entity storage.Measurement
+	var entity database.Measurement
 
 	if m.ID == "" {
 		entity, err = s.store.CreateMeasurement(m)

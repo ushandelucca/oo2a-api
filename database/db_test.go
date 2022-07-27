@@ -1,4 +1,4 @@
-package storage
+package database
 
 import (
 	"database/sql"
@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 }
 
 func run(m *testing.M) (code int, err error) {
-	db, err := sql.Open("sqlite3", "file:../test.db?cache=shared")
+	db, err := sql.Open("sqlite3", "file:../specs/test.db?cache=shared")
 	if err != nil {
 		return -1, fmt.Errorf("could not connect to database: %w", err)
 	}
