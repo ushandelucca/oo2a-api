@@ -34,7 +34,7 @@ var createMeasurementTestCases = []struct {
 	wantMeasurement Measurement
 	wantErr         bool
 }{
-	{"simple", Measurement{ID: "", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{ID: "id", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
+	{"case 1", Measurement{"", "t1", "s1", 1.3, "%"}, Measurement{"id", "t1", "s1", 1.3, "%"}, false},
 	{"error when id", Measurement{"id1", "t1", "s1", 1.3, "%"}, Measurement{}, true},
 }
 
@@ -63,8 +63,8 @@ var readDeleteTestCases = []struct {
 	arg     Measurement
 	wantErr bool
 }{
-	{"simple", Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
-	{"simple", Measurement{Timestamp: "t2", Sensor: "s1", Value: 2.1, Unit: "%"}, false},
+	{"case 1", Measurement{"", "t1", "s1", 1.3, "%"}, false},
+	{"case 2", Measurement{"", "t2", "s1", 2.1, "%"}, false},
 }
 
 func TestReadMeasurement(t *testing.T) {
@@ -113,8 +113,8 @@ var updateMeasurementTestCases = []struct {
 	wantMeasurement Measurement
 	wantErr         bool
 }{
-	{"simple", Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.1, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.2, Unit: "%"}, false},
-	{"error when id", Measurement{Timestamp: "t1", Sensor: "s1", Value: 2.1, Unit: "%"}, Measurement{Timestamp: "t1.1", Sensor: "s1", Value: 2.2, Unit: "%"}, false},
+	{"case 1", Measurement{"", "t1", "s1", 1.1, "%"}, Measurement{"", "t1", "s1", 1.2, "%"}, false},
+	{"case 2", Measurement{"", "t1", "s1", 2.1, "%"}, Measurement{"", "t1.1", "s1", 2.2, "%"}, false},
 }
 
 func TestUpdateMeasurement(t *testing.T) {
