@@ -29,122 +29,114 @@ func TestSetupMeasurements(t *testing.T) {
 }
 
 var createMeasurementTestCases = []struct {
-	description         string
-	measurement         Measurement
-	expectedMeasurement Measurement
-	expectError         bool
+	name            string
+	arg             Measurement
+	wantMeasurement Measurement
+	wantErr         bool
 }{
-	{"simple", Measurement{ID: "", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
-	{"error when id", Measurement{ID: "id1", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, true},
+	{"simple", Measurement{ID: "", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, Measurement{ID: "id", Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
+	{"error when id", Measurement{"id1", "t1", "s1", 1.3, "%"}, Measurement{}, true},
 }
 
-func TestCreatMeasurement(t *testing.T) {
-	var actual Measurement
-	var err error
+func TestCreateMeasurement(t *testing.T) {
+	for _, tt := range createMeasurementTestCases {
+		t.Run(tt.name, func(t *testing.T) {
 
-	for _, tc := range createMeasurementTestCases {
-		actual, err = testStore.CreateMeasurement(tc.measurement)
+			got, err := testStore.CreateMeasurement(tt.arg)
 
-		if tc.expectError {
-			assert.Error(t, err)
-			assert.Equal(t, emptyMeasurement, actual)
-		} else {
-			assert.NoError(t, err)
-			assert.NotZero(t, actual.ID)
-			assert.Equal(t, tc.expectedMeasurement.Timestamp, actual.Timestamp)
-			assert.Equal(t, tc.expectedMeasurement.Sensor, actual.Sensor)
-			assert.Equal(t, tc.expectedMeasurement.Value, actual.Value)
-			assert.Equal(t, tc.expectedMeasurement.Unit, actual.Unit)
-		}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreateMeasurement() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			assert.True(t, (tt.wantMeasurement.ID != got.ID) != tt.wantErr)
+			assert.Equal(t, tt.wantMeasurement.Timestamp, got.Timestamp)
+			assert.Equal(t, tt.wantMeasurement.Sensor, got.Sensor)
+			assert.Equal(t, tt.wantMeasurement.Value, got.Value)
+			assert.Equal(t, tt.wantMeasurement.Unit, got.Unit)
+		})
 	}
 }
 
 var readDeleteTestCases = []struct {
-	description string
-	valueObject Measurement
-	expectError bool
+	name    string
+	arg     Measurement
+	wantErr bool
 }{
 	{"simple", Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.3, Unit: "%"}, false},
 	{"simple", Measurement{Timestamp: "t2", Sensor: "s1", Value: 2.1, Unit: "%"}, false},
 }
 
 func TestReadMeasurement(t *testing.T) {
-	var entity Measurement
-	var actual Measurement
-	var err error
+	for _, tt := range readDeleteTestCases {
+		t.Run(tt.name, func(t *testing.T) {
+			entity, err := testStore.CreateMeasurement(tt.arg)
+			require.NoError(t, err)
+			require.NotZero(t, entity.ID)
 
-	for _, tc := range readDeleteTestCases {
-		entity, err = testStore.CreateMeasurement(tc.valueObject)
-		require.NoError(t, err)
+			got, err := testStore.ReadMeasurement(entity.ID)
 
-		actual, err = testStore.ReadMeasurement(entity.ID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ReadMeasurement() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 
-		if tc.expectError {
-			assert.Error(t, err)
-			assert.Equal(t, emptyMeasurement, entity)
-		} else {
-			assert.NoError(t, err)
-			assert.NotZero(t, actual.ID)
-			assert.Equal(t, actual.Timestamp, entity.Timestamp)
-			assert.Equal(t, actual.Sensor, entity.Sensor)
-			assert.Equal(t, actual.Value, entity.Value)
-			assert.Equal(t, actual.Unit, entity.Unit)
-		}
+			assert.Equal(t, got.ID, entity.ID)
+			assert.Equal(t, got.Timestamp, entity.Timestamp)
+			assert.Equal(t, got.Sensor, entity.Sensor)
+			assert.Equal(t, got.Value, entity.Value)
+			assert.Equal(t, got.Unit, entity.Unit)
+		})
 	}
 }
 
 func TestDeleteMeasurement(t *testing.T) {
-	var entity Measurement
-	var err error
+	for _, tt := range readDeleteTestCases {
+		t.Run(tt.name, func(t *testing.T) {
+			entity, err := testStore.CreateMeasurement(tt.arg)
+			require.NoError(t, err)
+			require.NotZero(t, entity.ID)
 
-	for _, tc := range readDeleteTestCases {
-		entity, err = testStore.CreateMeasurement(tc.valueObject)
-		require.NoError(t, err)
-		require.NotZero(t, entity.ID)
+			err = testStore.DeleteMeasurement(entity.ID)
 
-		err = testStore.DeleteMeasurement(entity.ID)
-
-		if tc.expectError {
-			assert.Error(t, err)
-		} else {
-			assert.NoError(t, err)
-		}
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DeleteMeasurement() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
 	}
 }
 
 var updateMeasurementTestCases = []struct {
-	description        string
-	measurement        Measurement
-	updatedMeasurement Measurement
-	expectError        bool
+	name            string
+	arg             Measurement
+	wantMeasurement Measurement
+	wantErr         bool
 }{
 	{"simple", Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.1, Unit: "%"}, Measurement{Timestamp: "t1", Sensor: "s1", Value: 1.2, Unit: "%"}, false},
 	{"error when id", Measurement{Timestamp: "t1", Sensor: "s1", Value: 2.1, Unit: "%"}, Measurement{Timestamp: "t1.1", Sensor: "s1", Value: 2.2, Unit: "%"}, false},
 }
 
 func TestUpdateMeasurement(t *testing.T) {
-	var entity Measurement
-	var actual Measurement
-	var err error
+	for _, tt := range updateMeasurementTestCases {
+		t.Run(tt.name, func(t *testing.T) {
+			entity, err := testStore.CreateMeasurement(tt.arg)
+			require.NoError(t, err)
+			require.NotZero(t, entity.ID)
 
-	for _, tc := range updateMeasurementTestCases {
-		entity, err = testStore.CreateMeasurement(tc.measurement)
-		require.NoError(t, err)
+			tt.wantMeasurement.ID = entity.ID
+			got, err := testStore.UpdateMeasurement(tt.wantMeasurement)
 
-		tc.updatedMeasurement.ID = entity.ID
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UpdateMeasurement() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 
-		actual, err = testStore.UpdateMeasurement(tc.updatedMeasurement)
-
-		if tc.expectError {
-			assert.Error(t, err)
-			assert.Equal(t, emptyMeasurement, entity)
-		} else {
-			assert.NoError(t, err)
-			assert.Equal(t, actual.ID, tc.updatedMeasurement.ID)
-			assert.Equal(t, actual.Timestamp, tc.updatedMeasurement.Timestamp)
-			assert.Equal(t, actual.Sensor, tc.updatedMeasurement.Sensor)
-			assert.Equal(t, actual.Value, tc.updatedMeasurement.Value)
-			assert.Equal(t, actual.Unit, tc.updatedMeasurement.Unit)
-		}
+			assert.Equal(t, tt.wantMeasurement.ID, got.ID)
+			assert.Equal(t, tt.wantMeasurement.Timestamp, got.Timestamp)
+			assert.Equal(t, tt.wantMeasurement.Sensor, got.Sensor)
+			assert.Equal(t, tt.wantMeasurement.Value, got.Value)
+			assert.Equal(t, tt.wantMeasurement.Unit, got.Unit)
+		})
 	}
 }
