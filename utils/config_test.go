@@ -27,7 +27,7 @@ func TestLoadConfig(t *testing.T) {
 		wantErr    bool
 	}{
 		{"wrong path", args{path: ".."}, nil, true},
-		{"simple", args{path: "../specs"}, &Conf{"file:../specs/test.db?cache=shared", "8080", "key"}, false},
+		{"simple", args{path: "../test"}, &Conf{"file:../test/test.db?cache=shared", "8080", "key"}, false},
 	}
 
 	for _, tt := range tests {
