@@ -42,7 +42,6 @@ var createMeasurementTestCases = []struct {
 func TestCreateMeasurement(t *testing.T) {
 	for _, tt := range createMeasurementTestCases {
 		t.Run(tt.name, func(t *testing.T) {
-
 			got, err := testStore.CreateMeasurement(tt.arg)
 
 			if (err != nil) != tt.wantErr {

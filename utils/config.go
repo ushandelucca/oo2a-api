@@ -8,7 +8,7 @@ type Conf struct {
 	ApiSource      string `mapstructure:"API_KEY"`
 }
 
-// LoadConfig reads configuration from file or environment variables.
+// LoadConfig reads the configuration from a file and the environment variables.
 func LoadConfig(path string) (config *Conf, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
