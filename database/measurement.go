@@ -160,6 +160,8 @@ func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err e
 		return emptyMeasurement, err
 	}
 
+	defer stmt.Close()
+
 	return measurement, nil
 }
 

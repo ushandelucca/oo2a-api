@@ -103,6 +103,14 @@ func TestDeleteMeasurement(t *testing.T) {
 				t.Errorf("DeleteMeasurement() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+
+			got, err := testStore.ReadMeasurement(entity.ID)
+			require.NoError(t, err)
+
+			if !reflect.DeepEqual(got, emptyMeasurement) {
+				t.Errorf("DeleteMeasurement() = %v, want %v", got, emptyMeasurement)
+			}
+
 		})
 	}
 }
