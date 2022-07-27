@@ -1,6 +1,7 @@
 package database
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,11 +82,10 @@ func TestReadMeasurement(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, got.ID, entity.ID)
-			assert.Equal(t, got.Timestamp, entity.Timestamp)
-			assert.Equal(t, got.Sensor, entity.Sensor)
-			assert.Equal(t, got.Value, entity.Value)
-			assert.Equal(t, got.Unit, entity.Unit)
+			if !reflect.DeepEqual(got, entity) {
+				t.Errorf("ReadMeasurement() = %v, want %v", got, entity)
+			}
+
 		})
 	}
 }
@@ -113,8 +113,8 @@ var updateMeasurementTestCases = []struct {
 	wantMeasurement Measurement
 	wantErr         bool
 }{
-	{"case 1", Measurement{"", "t1", "s1", 1.1, "%"}, Measurement{"", "t1", "s1", 1.2, "%"}, false},
-	{"case 2", Measurement{"", "t1", "s1", 2.1, "%"}, Measurement{"", "t1.1", "s1", 2.2, "%"}, false},
+	{"case 1", Measurement{"", "t1", "s1", 1, "%"}, Measurement{"", "t1", "s1", 1.2, "%"}, false},
+	{"case 2", Measurement{"", "t1", "s1", 2, "%"}, Measurement{"", "t1.1", "s1", 2.2, "%"}, false},
 }
 
 func TestUpdateMeasurement(t *testing.T) {
@@ -125,18 +125,19 @@ func TestUpdateMeasurement(t *testing.T) {
 			require.NotZero(t, entity.ID)
 
 			tt.wantMeasurement.ID = entity.ID
-			got, err := testStore.UpdateMeasurement(tt.wantMeasurement)
+			_, err = testStore.UpdateMeasurement(tt.wantMeasurement)
+			require.NoError(t, err)
+
+			got, err := testStore.ReadMeasurement(entity.ID)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateMeasurement() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			assert.Equal(t, tt.wantMeasurement.ID, got.ID)
-			assert.Equal(t, tt.wantMeasurement.Timestamp, got.Timestamp)
-			assert.Equal(t, tt.wantMeasurement.Sensor, got.Sensor)
-			assert.Equal(t, tt.wantMeasurement.Value, got.Value)
-			assert.Equal(t, tt.wantMeasurement.Unit, got.Unit)
+			if !reflect.DeepEqual(got, tt.wantMeasurement) {
+				t.Errorf("UpdateMeasurement() = %v, want %v", got, tt.wantMeasurement)
+			}
 		})
 	}
 }

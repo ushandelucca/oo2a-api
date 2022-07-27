@@ -35,6 +35,7 @@ type MeasurementStore interface {
 	DeleteMeasurement(id string) (err error)
 }
 
+// TODO: comments
 // exported 'constructor'
 func NewMeasurementStore(db *sql.DB) *measurementStore {
 	return &measurementStore{
@@ -61,14 +62,14 @@ func (s *measurementStore) SetupMeasurements() (err error) {
 	tx, e := s.db.Begin()
 
 	if e != nil {
-		err = fmt.Errorf("could not begin transaction: %w", e)
+		err = fmt.Errorf("setup: could not begin transaction: %w", e)
 		return err
 	}
 
 	stmt, e := tx.Prepare(sql)
 
 	if e != nil {
-		err = fmt.Errorf("could not prepare transaction: %w", e)
+		err = fmt.Errorf("setup: could not prepare transaction: %w", e)
 		return err
 	}
 
@@ -77,48 +78,14 @@ func (s *measurementStore) SetupMeasurements() (err error) {
 	_, e = stmt.Exec()
 
 	if e != nil {
-		err = fmt.Errorf("could not execute statement: %w", e)
+		err = fmt.Errorf("setup: could not execute statement: %w", e)
 		return err
 	}
 
 	e = tx.Commit()
 
 	if e != nil {
-		err = fmt.Errorf("could not commit transaction: %w", e)
-		return err
-	}
-
-	return nil
-}
-
-func (s *measurementStore) executeTx(sql string, m Measurement) (err error) {
-	tx, e := s.db.Begin()
-
-	if e != nil {
-		err = fmt.Errorf("could not begin transaction: %w", e)
-		return err
-	}
-
-	stmt, e := tx.Prepare(sql)
-
-	if e != nil {
-		err = fmt.Errorf("could not prepare transaction: %w", e)
-		return err
-	}
-
-	defer stmt.Close()
-
-	_, e = stmt.Exec(m.ID, m.Timestamp, m.Sensor, m.Value, m.Unit)
-
-	if e != nil {
-		err = fmt.Errorf("could not execute statement: %w", e)
-		return err
-	}
-
-	e = tx.Commit()
-
-	if e != nil {
-		err = fmt.Errorf("could not commit transaction: %w", e)
+		err = fmt.Errorf("setup: could not commit transaction: %w", e)
 		return err
 	}
 
@@ -137,14 +104,37 @@ func (s *measurementStore) CreateMeasurement(m Measurement) (entity Measurement,
 	m.ID, e = shortid.Generate()
 
 	if e != nil {
-		err = fmt.Errorf("could not generate id: %w", e)
+		err = fmt.Errorf("insert: could not generate id: %w", e)
 		return emptyMeasurement, err
 	}
 
-	e = s.executeTx(sql, m)
+	tx, e := s.db.Begin()
 
 	if e != nil {
-		err = fmt.Errorf("insert: %w", e)
+		err = fmt.Errorf("insert: could not begin transaction: %w", e)
+		return emptyMeasurement, err
+	}
+
+	stmt, e := tx.Prepare(sql)
+
+	if e != nil {
+		err = fmt.Errorf("insert: could not prepare transaction: %w", e)
+		return emptyMeasurement, err
+	}
+
+	defer stmt.Close()
+
+	_, e = stmt.Exec(m.ID, m.Timestamp, m.Sensor, m.Value, m.Unit)
+
+	if e != nil {
+		err = fmt.Errorf("insert: could not execute statement: %w", e)
+		return emptyMeasurement, err
+	}
+
+	e = tx.Commit()
+
+	if e != nil {
+		err = fmt.Errorf("insert: could not commit transaction: %w", e)
 		return emptyMeasurement, err
 	}
 
@@ -166,7 +156,7 @@ func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err e
 		if e == sql.ErrNoRows {
 			return emptyMeasurement, nil
 		}
-		err = fmt.Errorf("could not query: %w", e)
+		err = fmt.Errorf("read: could not query: %w", e)
 		return emptyMeasurement, err
 	}
 
@@ -176,10 +166,33 @@ func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err e
 func (s *measurementStore) UpdateMeasurement(m Measurement) (entity Measurement, err error) {
 	const sql = "UPDATE measurements SET Timestamp = ?, Sensor = ?, Value = ?, Unit = ? WHERE ID = ?"
 
-	e := s.executeTx(sql, m)
+	tx, e := s.db.Begin()
 
 	if e != nil {
-		err = fmt.Errorf("update: %w", e)
+		err = fmt.Errorf("update: could not begin transaction: %w", e)
+		return emptyMeasurement, err
+	}
+
+	stmt, e := tx.Prepare(sql)
+
+	if e != nil {
+		err = fmt.Errorf("update: could not prepare transaction: %w", e)
+		return emptyMeasurement, err
+	}
+
+	defer stmt.Close()
+
+	_, e = stmt.Exec(m.Timestamp, m.Sensor, m.Value, m.Unit, m.ID)
+
+	if e != nil {
+		err = fmt.Errorf("update: could not execute statement: %w", e)
+		return emptyMeasurement, err
+	}
+
+	e = tx.Commit()
+
+	if e != nil {
+		err = fmt.Errorf("update: could not commit transaction: %w", e)
 		return emptyMeasurement, err
 	}
 
@@ -190,14 +203,14 @@ func (s *measurementStore) DeleteMeasurement(id string) (err error) {
 	tx, e := s.db.Begin()
 
 	if e != nil {
-		err = fmt.Errorf("could not begin transaction: %w", e)
+		err = fmt.Errorf("delete: could not begin transaction: %w", e)
 		return err
 	}
 
 	stmt, e := tx.Prepare("DELETE from measurements where id = ?")
 
 	if e != nil {
-		err = fmt.Errorf("could not prepare transaction: %w", e)
+		err = fmt.Errorf("delete: could not prepare transaction: %w", e)
 		return err
 	}
 
@@ -206,14 +219,14 @@ func (s *measurementStore) DeleteMeasurement(id string) (err error) {
 	_, e = stmt.Exec(id)
 
 	if e != nil {
-		err = fmt.Errorf("could not execute statement: %w", e)
+		err = fmt.Errorf("delete: could not execute statement: %w", e)
 		return err
 	}
 
 	e = tx.Commit()
 
 	if e != nil {
-		err = fmt.Errorf("could not commit transaction: %w", e)
+		err = fmt.Errorf("delete: could not commit transaction: %w", e)
 		return err
 	}
 
