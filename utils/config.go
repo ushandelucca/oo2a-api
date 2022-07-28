@@ -5,10 +5,22 @@ import "github.com/spf13/viper"
 type Conf struct {
 	DataSourceName string `mapstructure:"DATA_SOURCE_NAME"`
 	ServerPort     string `mapstructure:"SERVER_PORT"`
-	ApiSource      string `mapstructure:"API_KEY"`
+	ApiKey         string `mapstructure:"API_KEY"`
 }
 
-// LoadConfig reads the configuration from a file and the environment variables.
+// 'constructor'
+func newConfig() (config *Conf) {
+	config = &Conf{}
+
+	config.DataSourceName = "dataSource"
+	config.ServerPort = "port"
+	config.ApiKey = "key"
+
+	return config
+}
+
+// LoadConfig reads configuration from file or environment variables.
+// path specifies the path to "app.env"
 func LoadConfig(path string) (config *Conf, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
@@ -21,7 +33,7 @@ func LoadConfig(path string) (config *Conf, err error) {
 		return
 	}
 
-	config = &Conf{}
+	config = newConfig()
 	err = viper.Unmarshal(config)
 	return
 }
