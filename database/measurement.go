@@ -1,7 +1,8 @@
-// Package database implements the db access for the CRUD operations.
+// Package database implements the DB access for the CRUD operations.
 package database
 
 import (
+	"MeasurementWeb/utils"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,46 +10,51 @@ import (
 	"github.com/teris-io/shortid"
 )
 
-// Measurement is the transport object for the values
-type Measurement struct {
-	ID        string  `json:"id"`
-	Timestamp string  `json:"timestamp"`
-	Sensor    string  `json:"sensor"`
-	Value     float64 `json:"value"`
-	Unit      string  `json:"unit"`
+// MeasurementDo is the data object for the database.
+type MeasurementDo struct {
+	ID        string
+	Timestamp string
+	Sensor    string
+	Value     float64
+	Unit      string
 }
 
-var emptyMeasurement = Measurement{}
+var emptyMeasurement = MeasurementDo{}
 
-// MeasurementStore provides the CRUD storage functionality.
-type MeasurementStore interface {
+// MeasurementDB provides the CRUD storage functionality.
+type MeasurementDB interface {
 	// SetupMeasurements creates the database and the tables.
 	SetupMeasurements() (err error)
 
 	// CreateMeasurement adds a new measurement to the table. The ID must be empty and
 	// will be defined within this function.
-	CreateMeasurement(m Measurement) (entity Measurement, err error)
+	CreateMeasurement(m MeasurementDo) (entity MeasurementDo, err error)
 
 	// ReadMeasurement reads an measurement
-	ReadMeasurement(id string) (entity Measurement, err error)
-	UpdateMeasurement(m Measurement) (entity Measurement, err error)
+	ReadMeasurement(id string) (entity MeasurementDo, err error)
+	UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error)
 	DeleteMeasurement(id string) (err error)
 }
 
 // TODO: comments
 // exported 'constructor'
-func NewMeasurementStore(db *sql.DB) *measurementStore {
-	return &measurementStore{
-		db: db,
+func NewMeasurementDB(config *utils.Conf) (db *measurementDB, err error) {
+	database, err := sql.Open("sqlite3", config.DataSourceName)
+	if err != nil {
+		return nil, fmt.Errorf("could not connect to database: %w", err)
 	}
+
+	db = &measurementDB{db: database}
+
+	return db, nil
 }
 
 // unexported SQL implementation
-type measurementStore struct {
+type measurementDB struct {
 	db *sql.DB
 }
 
-func (s *measurementStore) SetupMeasurements() (err error) {
+func (s *measurementDB) SetupMeasurements() (err error) {
 	const sql = "CREATE TABLE \"measurements\" ( \"ID\" TEXT UNIQUE, \"Timestamp\" TEXT, \"Sensor\" TEXT, \"Value\" NUMERIC, \"Unit\" TEXT, PRIMARY KEY(\"ID\") )"
 
 	// use config
@@ -92,7 +98,7 @@ func (s *measurementStore) SetupMeasurements() (err error) {
 	return nil
 }
 
-func (s *measurementStore) CreateMeasurement(m Measurement) (entity Measurement, err error) {
+func (s *measurementDB) CreateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
 	const sql = "INSERT INTO measurements (ID, Timestamp, Sensor, Value, Unit) VALUES (?, ?, ?, ?, ?)"
 
 	if m.ID != "" {
@@ -141,7 +147,7 @@ func (s *measurementStore) CreateMeasurement(m Measurement) (entity Measurement,
 	return m, nil
 }
 
-func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err error) {
+func (s *measurementDB) ReadMeasurement(id string) (entity MeasurementDo, err error) {
 	stmt, err := s.db.Prepare("SELECT ID, Timestamp, Sensor, Value, Unit from measurements WHERE ID = ?")
 
 	if err != nil {
@@ -165,7 +171,7 @@ func (s *measurementStore) ReadMeasurement(id string) (entity Measurement, err e
 	return measurement, nil
 }
 
-func (s *measurementStore) UpdateMeasurement(m Measurement) (entity Measurement, err error) {
+func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
 	const sql = "UPDATE measurements SET Timestamp = ?, Sensor = ?, Value = ?, Unit = ? WHERE ID = ?"
 
 	tx, e := s.db.Begin()
@@ -201,7 +207,7 @@ func (s *measurementStore) UpdateMeasurement(m Measurement) (entity Measurement,
 	return m, nil
 }
 
-func (s *measurementStore) DeleteMeasurement(id string) (err error) {
+func (s *measurementDB) DeleteMeasurement(id string) (err error) {
 	tx, e := s.db.Begin()
 
 	if e != nil {

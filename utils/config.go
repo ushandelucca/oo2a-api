@@ -2,13 +2,14 @@ package utils
 
 import "github.com/spf13/viper"
 
+// Conf holds the app configuration.
 type Conf struct {
 	DataSourceName string `mapstructure:"DATA_SOURCE_NAME"`
 	ServerPort     string `mapstructure:"SERVER_PORT"`
 	ApiKey         string `mapstructure:"API_KEY"`
 }
 
-// 'constructor'
+// newConfig creates and initializes the configuration structure.
 func newConfig() (config *Conf) {
 	config = &Conf{}
 
@@ -19,11 +20,12 @@ func newConfig() (config *Conf) {
 	return config
 }
 
-// LoadConfig reads configuration from file or environment variables.
-// path specifies the path to "app.env"
+// LoadConfig initializes the configuration from a file or
+// using the environment variables. The path specifies the
+// path to the config file with the name "measurement.env".
 func LoadConfig(path string) (config *Conf, err error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
+	viper.SetConfigName("measurement")
 	viper.SetConfigType("env")
 
 	viper.AutomaticEnv()

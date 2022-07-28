@@ -3,50 +3,92 @@ package service
 
 import (
 	"MeasurementWeb/database"
+	"MeasurementWeb/utils"
 	"fmt"
+	"log"
+	"time"
+
+	"github.com/dranikpg/dto-mapper"
 )
+
+type Unit int
+
+const (
+	Percent Unit = iota
+	lph
+)
+
+// Measurement is the transport object for the measurement values.
+type MeasurementModel struct {
+	Timestamp time.Time
+	Sensor    string
+	Value     float64
+	Unit      Unit
+}
+
+// MeasurementDto is the transport object for the measurement values.
+type Oo2aModel struct {
+	ValuesBegin time.Time
+	ValuesEnd   time.Time
+
+	LevelCurrent float64
+	LevelValues  []float64
+	LevelUnit    Unit
+
+	PrecipitationCurrent float64
+	PrecipitationValues  []float64
+	PrecipitationUnit    Unit
+}
 
 type ManagementService interface {
 	InitMeasurement() (err error)
-	UpsertMeasurement(m database.Measurement) (entity database.Measurement, err error)
+	UpsertMeasurement(m database.MeasurementDo) (entity database.MeasurementDo, err error)
 	DeleteMeasurement(id string) (err error)
 }
 
 // exported 'constructor'
-func NewManagementService() *managementService {
-	// ---------------------config---vvv
-	s := database.NewMeasurementStore(nil)
+func NewManagementService(config *utils.Conf) *managementService {
+	db, err := database.NewMeasurementDB(config)
 
-	return &managementService{store: s}
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+
+	return &managementService{db: db}
 }
 
-// managementService relies on the MeasurementStore -> mockable for the tests without DB
+// managementService relies on the MeasurementDB which is mockable for the tests without a DB
 type managementService struct {
-	store database.MeasurementStore
+	db database.MeasurementDB
 }
 
 func (s *managementService) InitMeasurement() (err error) {
-	err = s.store.SetupMeasurements()
+	err = s.db.SetupMeasurements()
 	return err
 }
 
-func (s *managementService) UpsertMeasurement(m database.Measurement) (err error) {
+func (s *managementService) UpsertMeasurement(to MeasurementDto) (err error) {
 	// do validation/business rule validation here
 	// finally, insert into the DB
 
-	var entity database.Measurement
+	do := database.MeasurementDo{}
+	err = dto.Map(&do, to)
+	if err != nil {
+		return err
+	}
 
-	if m.ID == "" {
-		entity, err = s.store.CreateMeasurement(m)
+	if do.ID == "" {
+		_, err = s.db.CreateMeasurement(do)
 	} else {
-		entity, err = s.store.UpdateMeasurement(m)
+		_, err = s.db.UpdateMeasurement(do)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Sprintln("result: %w", entity)
+	fmt.Sprintln("result: %w", do)
 
 	return nil
 }
