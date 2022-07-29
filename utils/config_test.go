@@ -1,20 +1,9 @@
 package utils
 
 import (
-	"os"
 	"reflect"
 	"testing"
 )
-
-func TestMain(m *testing.M) {
-	// before tests
-
-	code := m.Run()
-
-	// after tests
-
-	os.Exit(code)
-}
 
 func TestLoadConfig(t *testing.T) {
 	type args struct {

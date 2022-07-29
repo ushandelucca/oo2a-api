@@ -6,29 +6,33 @@ import (
 	"testing"
 )
 
-func Test_managementService_SaveMeasurement(t *testing.T) {
-	type fields struct {
-		db database.MeasurementDB
-	}
-	type args struct {
-		m MeasurementModel
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
+type args struct {
+	m  MeasurementModel
+	id string
+}
+
+var saveTests = []struct {
+	name       string
+	args       args
+	mockDo     database.MeasurementDo
+	mockEntity database.MeasurementDo
+	mockError  error
+	wantErr    bool
+}{
+	{"case 1", args{MeasurementModel{}, ""}, database.MeasurementDo{}, database.MeasurementDo{}, nil, true},
+}
+
+func TestSaveMeasurement(t *testing.T) {
+	for _, tt := range saveTests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &managementService{
-				db: tt.fields.db,
-			}
-			if err := s.SaveMeasurement(tt.args.m); (err != nil) != tt.wantErr {
+
+			mockDB.On("CreateMeasurement", tt.mockDo).Return(tt.mockEntity, tt.mockError)
+
+			if err := testService.SaveMeasurement(tt.args.m); (err != nil) != tt.wantErr {
 				t.Errorf("managementService.SaveMeasurement() error = %v, wantErr %v", err, tt.wantErr)
 			}
+
+			// mockDB.AssertExpectations(t)
 		})
 	}
 }
