@@ -57,7 +57,6 @@ func NewManagementService(config *utils.Conf) *managementService {
 	return &managementService{db: db}
 }
 
-// managementService relies on the MeasurementDB which is mockable for the tests without a DB
 type managementService struct {
 	db database.MeasurementDB
 }
