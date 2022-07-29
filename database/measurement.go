@@ -36,8 +36,7 @@ type MeasurementDB interface {
 	DeleteMeasurement(id string) (err error)
 }
 
-// TODO: comments
-// exported 'constructor'
+// NewMeasurementDB returns the config object.
 func NewMeasurementDB(config *utils.Conf) (db *measurementDB, err error) {
 	database, err := sql.Open("sqlite3", config.DataSourceName)
 	if err != nil {
@@ -49,7 +48,6 @@ func NewMeasurementDB(config *utils.Conf) (db *measurementDB, err error) {
 	return db, nil
 }
 
-// unexported SQL implementation
 type measurementDB struct {
 	db *sql.DB
 }
@@ -57,9 +55,7 @@ type measurementDB struct {
 func (s *measurementDB) SetupMeasurements() (err error) {
 	const sql = "CREATE TABLE \"measurements\" ( \"ID\" TEXT UNIQUE, \"Timestamp\" TEXT, \"Sensor\" TEXT, \"Value\" NUMERIC, \"Unit\" TEXT, PRIMARY KEY(\"ID\") )"
 
-	// use config
-
-	// exit if table already exits
+	// exit if table already exists
 	_, e := s.db.Exec("SELECT * FROM measurements LIMIT 1")
 	if e == nil {
 		return nil

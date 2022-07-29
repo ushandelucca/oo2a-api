@@ -72,6 +72,7 @@ func (s *managementService) SaveMeasurement(m MeasurementModel) (err error) {
 	// finally, insert into the DB
 
 	do := database.MeasurementDo{}
+	// TODO fix the mapping e.g. Timstamp to string
 	err = dto.Map(&do, m)
 	if err != nil {
 		return err
