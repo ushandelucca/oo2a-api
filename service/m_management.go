@@ -42,8 +42,7 @@ type Oo2aModel struct {
 
 type ManagementService interface {
 	InitMeasurement() (err error)
-	UpsertMeasurement(m database.MeasurementDo) (entity database.MeasurementDo, err error)
-	DeleteMeasurement(id string) (err error)
+	SaveMeasurement(m database.MeasurementDo) (entity database.MeasurementDo, err error)
 }
 
 // exported 'constructor'
@@ -68,12 +67,12 @@ func (s *managementService) InitMeasurement() (err error) {
 	return err
 }
 
-func (s *managementService) UpsertMeasurement(to MeasurementDto) (err error) {
+func (s *managementService) SaveMeasurement(m MeasurementModel) (err error) {
 	// do validation/business rule validation here
 	// finally, insert into the DB
 
 	do := database.MeasurementDo{}
-	err = dto.Map(&do, to)
+	err = dto.Map(&do, m)
 	if err != nil {
 		return err
 	}
