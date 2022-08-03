@@ -111,7 +111,7 @@ func (s *managementService) SaveMeasurement(transferObject MeasurementDto) (err 
 	if dataObject.ID == 0 {
 		_, err = s.db.CreateMeasurement(dataObject)
 	} else {
-		_, err = s.db.UpdateMeasurement(dataObject)
+		err = s.db.UpdateMeasurement(dataObject)
 	}
 
 	if err != nil {

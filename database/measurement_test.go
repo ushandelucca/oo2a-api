@@ -108,8 +108,8 @@ func TestDeleteMeasurement(t *testing.T) {
 			got, err := testDB.ReadMeasurement(entity.ID)
 			require.NoError(t, err)
 
-			if !reflect.DeepEqual(got, emptyMeasurement) {
-				t.Errorf("DeleteMeasurement() = %v, want %v", got, emptyMeasurement)
+			if !reflect.DeepEqual(got, MeasurementDo{}) {
+				t.Errorf("DeleteMeasurement() = %v, want %v", got, MeasurementDo{})
 			}
 		})
 	}
@@ -125,6 +125,7 @@ var updateMeasurementTestCases = []struct {
 	{"case 2", MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 2, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 0.2, Unit: "%"}, false},
 }
 
+// TODO test case for no rows affected
 func TestUpdateMeasurement(t *testing.T) {
 	for _, tt := range updateMeasurementTestCases {
 		t.Run(tt.name, func(t *testing.T) {
@@ -133,7 +134,7 @@ func TestUpdateMeasurement(t *testing.T) {
 			require.NotZero(t, entity.ID)
 
 			tt.wantMeasurement.ID = entity.ID
-			_, err = testDB.UpdateMeasurement(tt.wantMeasurement)
+			err = testDB.UpdateMeasurement(tt.wantMeasurement)
 			require.NoError(t, err)
 
 			got, err := testDB.ReadMeasurement(entity.ID)

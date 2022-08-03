@@ -21,8 +21,6 @@ type MeasurementDo struct {
 	Unit      string
 }
 
-var emptyMeasurement = MeasurementDo{}
-
 // MeasurementDB provides the CRUD storage functionality.
 type MeasurementDB interface {
 	// SetupMeasurements creates the database and the tables.
@@ -37,7 +35,7 @@ type MeasurementDB interface {
 	ReadMeasurement(id uint) (entity MeasurementDo, err error)
 
 	// TODO comment
-	UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error)
+	UpdateMeasurement(m MeasurementDo) (err error)
 
 	// TODO comment
 	DeleteMeasurement(id uint) (err error)
@@ -73,7 +71,7 @@ func (s *measurementDB) SetupMeasurements() (err error) {
 func (s *measurementDB) CreateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
 	if m.ID != 0 {
 		err = errors.New("the ID must be empty")
-		return emptyMeasurement, err
+		return MeasurementDo{}, err
 	}
 
 	tx := s.db.Create(&m)
@@ -93,7 +91,7 @@ func (s *measurementDB) ReadMeasurement(id uint) (entity MeasurementDo, err erro
 	err = tx.Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return emptyMeasurement, nil
+			return MeasurementDo{}, nil
 		}
 
 		err = fmt.Errorf("read: %w", err)
@@ -102,16 +100,21 @@ func (s *measurementDB) ReadMeasurement(id uint) (entity MeasurementDo, err erro
 	return entity, err
 }
 
-func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
+func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (err error) {
+	entity := MeasurementDo{}
 	tx := s.db.First(&entity, "id = ?", m.ID)
 	tx.Model(entity).Updates(m)
 
-	err = tx.Error
-	if err != nil {
-		err = fmt.Errorf("update: %w", err)
+	if tx.RowsAffected == 0 {
+		return errors.New("update: no rows affected")
 	}
 
-	return entity, err
+	err = tx.Error
+	if err != nil {
+		return fmt.Errorf("update: %w", err)
+	}
+
+	return nil
 }
 
 func (s *measurementDB) DeleteMeasurement(id uint) (err error) {

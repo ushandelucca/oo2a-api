@@ -43,9 +43,9 @@ func (o *measurementMockDb) ReadMeasurement(id uint) (entity database.Measuremen
 	return args.Get(0).(database.MeasurementDo), args.Error(1)
 }
 
-func (o *measurementMockDb) UpdateMeasurement(m database.MeasurementDo) (entity database.MeasurementDo, err error) {
+func (o *measurementMockDb) UpdateMeasurement(m database.MeasurementDo) (err error) {
 	args := o.Called(m)
-	return args.Get(0).(database.MeasurementDo), args.Error(1)
+	return args.Error(1)
 }
 
 func (o *measurementMockDb) DeleteMeasurement(id uint) (err error) {
