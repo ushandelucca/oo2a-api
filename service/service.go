@@ -15,11 +15,11 @@ type Unit int
 
 const (
 	Percent Unit = iota + 1
-	Lph
+	MilliMeter
 )
 
 func (u Unit) String() string {
-	return [...]string{"", "Percent", "Lph"}[u]
+	return [...]string{"", "%", "mm"}[u]
 }
 
 // Measurement is the transport object for the measurement values.
