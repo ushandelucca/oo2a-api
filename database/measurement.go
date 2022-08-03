@@ -48,7 +48,7 @@ func NewMeasurementDB(config *utils.Conf) (db *measurementDB, err error) {
 
 	database, err := gorm.Open(sqlite.Open(config.DataSourceName), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("could not connect to database: %w", err)
+		return nil, fmt.Errorf("could not open database: %w", err)
 	}
 
 	db = &measurementDB{db: database}
@@ -64,7 +64,7 @@ func (s *measurementDB) SetupMeasurements() (err error) {
 	err = s.db.AutoMigrate(&MeasurementDo{})
 
 	if err != nil {
-		err = fmt.Errorf("setup: could not create table: %w", err)
+		err = fmt.Errorf("setup: %w", err)
 	}
 
 	return err
