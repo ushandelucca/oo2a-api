@@ -3,17 +3,19 @@ package database
 
 import (
 	"MeasurementWeb/utils"
-	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
-	"github.com/teris-io/shortid"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 // MeasurementDo is the data object for the database.
 type MeasurementDo struct {
-	ID        string
-	Timestamp string
+	gorm.Model
+	ID        uint `gorm:"primaryKey;autoIncrement"`
+	Timestamp time.Time
 	Sensor    string
 	Value     float64
 	Unit      string
@@ -31,14 +33,15 @@ type MeasurementDB interface {
 	CreateMeasurement(m MeasurementDo) (entity MeasurementDo, err error)
 
 	// ReadMeasurement reads an measurement
-	ReadMeasurement(id string) (entity MeasurementDo, err error)
+	ReadMeasurement(id uint) (entity MeasurementDo, err error)
 	UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error)
-	DeleteMeasurement(id string) (err error)
+	DeleteMeasurement(id uint) (err error)
 }
 
 // NewMeasurementDB returns the config object.
 func NewMeasurementDB(config *utils.Conf) (db *measurementDB, err error) {
-	database, err := sql.Open("sqlite3", config.DataSourceName)
+
+	database, err := gorm.Open(sqlite.Open(config.DataSourceName), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("could not connect to database: %w", err)
 	}
@@ -49,190 +52,49 @@ func NewMeasurementDB(config *utils.Conf) (db *measurementDB, err error) {
 }
 
 type measurementDB struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
 func (s *measurementDB) SetupMeasurements() (err error) {
-	const sql = "CREATE TABLE \"measurements\" ( \"ID\" TEXT UNIQUE, \"Timestamp\" TEXT, \"Sensor\" TEXT, \"Value\" NUMERIC, \"Unit\" TEXT, PRIMARY KEY(\"ID\") )"
+	err = s.db.AutoMigrate(&MeasurementDo{})
 
-	// exit if table already exists
-	_, e := s.db.Exec("SELECT * FROM measurements LIMIT 1")
-	if e == nil {
-		return nil
+	if err != nil {
+		err = fmt.Errorf("setup: could not create table: %w", err)
 	}
 
-	tx, e := s.db.Begin()
-
-	if e != nil {
-		err = fmt.Errorf("setup: could not begin transaction: %w", e)
-		return err
-	}
-
-	stmt, e := tx.Prepare(sql)
-
-	if e != nil {
-		err = fmt.Errorf("setup: could not prepare transaction: %w", e)
-		return err
-	}
-
-	defer stmt.Close()
-
-	_, e = stmt.Exec()
-
-	if e != nil {
-		err = fmt.Errorf("setup: could not execute statement: %w", e)
-		return err
-	}
-
-	e = tx.Commit()
-
-	if e != nil {
-		err = fmt.Errorf("setup: could not commit transaction: %w", e)
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (s *measurementDB) CreateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
-	const sql = "INSERT INTO measurements (ID, Timestamp, Sensor, Value, Unit) VALUES (?, ?, ?, ?, ?)"
-
-	if m.ID != "" {
+	if m.ID != 0 {
 		err = errors.New("the ID must be empty")
 		return emptyMeasurement, err
 	}
 
-	var e error
-	m.ID, e = shortid.Generate()
-
-	if e != nil {
-		err = fmt.Errorf("insert: could not generate id: %w", e)
-		return emptyMeasurement, err
-	}
-
-	tx, e := s.db.Begin()
-
-	if e != nil {
-		err = fmt.Errorf("insert: could not begin transaction: %w", e)
-		return emptyMeasurement, err
-	}
-
-	stmt, e := tx.Prepare(sql)
-
-	if e != nil {
-		err = fmt.Errorf("insert: could not prepare transaction: %w", e)
-		return emptyMeasurement, err
-	}
-
-	defer stmt.Close()
-
-	_, e = stmt.Exec(m.ID, m.Timestamp, m.Sensor, m.Value, m.Unit)
-
-	if e != nil {
-		err = fmt.Errorf("insert: could not execute statement: %w", e)
-		return emptyMeasurement, err
-	}
-
-	e = tx.Commit()
-
-	if e != nil {
-		err = fmt.Errorf("insert: could not commit transaction: %w", e)
-		return emptyMeasurement, err
-	}
+	s.db.Create(&m)
 
 	return m, nil
 }
 
-func (s *measurementDB) ReadMeasurement(id string) (entity MeasurementDo, err error) {
-	stmt, err := s.db.Prepare("SELECT ID, Timestamp, Sensor, Value, Unit from measurements WHERE ID = ?")
+func (s *measurementDB) ReadMeasurement(id uint) (entity MeasurementDo, err error) {
+	entity = MeasurementDo{}
 
-	if err != nil {
-		return emptyMeasurement, err
-	}
+	s.db.First(&entity, "id = ?", id)
 
-	measurement := emptyMeasurement
-
-	e := stmt.QueryRow(id).Scan(&measurement.ID, &measurement.Timestamp, &measurement.Sensor, &measurement.Value, &measurement.Unit)
-
-	if e != nil {
-		if e == sql.ErrNoRows {
-			return emptyMeasurement, nil
-		}
-		err = fmt.Errorf("read: could not query: %w", e)
-		return emptyMeasurement, err
-	}
-
-	defer stmt.Close()
-
-	return measurement, nil
+	return entity, nil
 }
 
 func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
-	const sql = "UPDATE measurements SET Timestamp = ?, Sensor = ?, Value = ?, Unit = ? WHERE ID = ?"
 
-	tx, e := s.db.Begin()
-
-	if e != nil {
-		err = fmt.Errorf("update: could not begin transaction: %w", e)
-		return emptyMeasurement, err
-	}
-
-	stmt, e := tx.Prepare(sql)
-
-	if e != nil {
-		err = fmt.Errorf("update: could not prepare transaction: %w", e)
-		return emptyMeasurement, err
-	}
-
-	defer stmt.Close()
-
-	_, e = stmt.Exec(m.Timestamp, m.Sensor, m.Value, m.Unit, m.ID)
-
-	if e != nil {
-		err = fmt.Errorf("update: could not execute statement: %w", e)
-		return emptyMeasurement, err
-	}
-
-	e = tx.Commit()
-
-	if e != nil {
-		err = fmt.Errorf("update: could not commit transaction: %w", e)
-		return emptyMeasurement, err
-	}
+	tx := s.db.First(&entity, "id = ?", m.ID)
+	tx.Model(entity).Updates(m)
 
 	return m, nil
 }
 
-func (s *measurementDB) DeleteMeasurement(id string) (err error) {
-	tx, e := s.db.Begin()
-
-	if e != nil {
-		err = fmt.Errorf("delete: could not begin transaction: %w", e)
-		return err
-	}
-
-	stmt, e := tx.Prepare("DELETE from measurements where id = ?")
-
-	if e != nil {
-		err = fmt.Errorf("delete: could not prepare transaction: %w", e)
-		return err
-	}
-
-	defer stmt.Close()
-
-	_, e = stmt.Exec(id)
-
-	if e != nil {
-		err = fmt.Errorf("delete: could not execute statement: %w", e)
-		return err
-	}
-
-	e = tx.Commit()
-
-	if e != nil {
-		err = fmt.Errorf("delete: could not commit transaction: %w", e)
-		return err
-	}
+func (s *measurementDB) DeleteMeasurement(id uint) (err error) {
+	entity := MeasurementDo{}
+	s.db.First(&entity, "id = ?", id)
 
 	return nil
 }

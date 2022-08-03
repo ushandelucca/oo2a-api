@@ -1,8 +1,8 @@
 package database
 
 import (
-	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -10,23 +10,23 @@ import (
 
 func TestSetupMeasurements(t *testing.T) {
 	// expecting the existing table
-	_, err := testDB.db.Exec("SELECT * FROM measurements LIMIT 1")
-	require.NoError(t, err)
-	err = testDB.SetupMeasurements()
+	tx := testDB.db.Exec("SELECT * FROM measurement_dos LIMIT 1")
+	require.NoError(t, tx.Error)
+	err := testDB.SetupMeasurements()
 	require.NoError(t, err)
 
 	// drop table
-	_, _ = testDB.db.Exec("DROP TABLE measurements")
-	_, err = testDB.db.Exec("SELECT * FROM measurements LIMIT 1")
-	require.Error(t, err)
+	testDB.db.Exec("DROP TABLE measurement_dos")
+	tx = testDB.db.Exec("SELECT * FROM measurement_dos LIMIT 1")
+	require.Error(t, tx.Error)
 
 	// create table
 	err = testDB.SetupMeasurements()
 	require.NoError(t, err)
 
 	// check table
-	_, err = testDB.db.Exec("SELECT * FROM measurements LIMIT 1")
-	require.NoError(t, err)
+	tx = testDB.db.Exec("SELECT * FROM measurement_dos LIMIT 1")
+	require.NoError(t, tx.Error)
 }
 
 var createMeasurementTestCases = []struct {
@@ -35,8 +35,8 @@ var createMeasurementTestCases = []struct {
 	wantMeasurement MeasurementDo
 	wantErr         bool
 }{
-	{"case 1", MeasurementDo{"", "t1", "s1", 1.3, "%"}, MeasurementDo{"id", "t1", "s1", 1.3, "%"}, false},
-	{"error when id", MeasurementDo{"id1", "t1", "s1", 1.3, "%"}, MeasurementDo{}, true},
+	{"case 1", MeasurementDo{Timestamp: time.Date(2022, 01, 1, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: .3, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 01, 1, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: .3, Unit: "%"}, false},
+	{"error when id", MeasurementDo{ID: 1, Timestamp: time.Date(2022, 01, 2, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: 1.3, Unit: "%"}, MeasurementDo{}, true},
 }
 
 func TestCreateMeasurement(t *testing.T) {
@@ -63,8 +63,8 @@ var readDeleteTestCases = []struct {
 	arg     MeasurementDo
 	wantErr bool
 }{
-	{"case 1", MeasurementDo{"", "t1", "s1", 1.3, "%"}, false},
-	{"case 2", MeasurementDo{"", "t2", "s1", 2.1, "%"}, false},
+	{"case 1", MeasurementDo{Timestamp: time.Date(2022, 02, 1, 10, 44, 48, 1, time.Local), Sensor: "s1", Value: 1.3, Unit: "%"}, false},
+	{"case 2", MeasurementDo{Timestamp: time.Date(2022, 02, 2, 10, 44, 48, 2, time.Local), Sensor: "s1", Value: 2.1, Unit: "%"}, false},
 }
 
 func TestReadMeasurement(t *testing.T) {
@@ -81,10 +81,15 @@ func TestReadMeasurement(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(got, entity) {
-				t.Errorf("ReadMeasurement() = %v, want %v", got, entity)
-			}
+			// if !reflect.DeepEqual(got, entity) {
+			// 	t.Errorf("ReadMeasurement() = %v, want %v", got, entity)
+			// }
 
+			assert.True(t, (tt.arg.ID != got.ID) != tt.wantErr)
+			assert.WithinDuration(t, tt.arg.Timestamp, got.Timestamp, 0)
+			assert.Equal(t, tt.arg.Sensor, got.Sensor)
+			assert.Equal(t, tt.arg.Value, got.Value)
+			assert.Equal(t, tt.arg.Unit, got.Unit)
 		})
 	}
 }
@@ -106,10 +111,11 @@ func TestDeleteMeasurement(t *testing.T) {
 			got, err := testDB.ReadMeasurement(entity.ID)
 			require.NoError(t, err)
 
-			if !reflect.DeepEqual(got, emptyMeasurement) {
-				t.Errorf("DeleteMeasurement() = %v, want %v", got, emptyMeasurement)
-			}
-
+			assert.True(t, (tt.arg.ID != got.ID) != tt.wantErr)
+			assert.WithinDuration(t, tt.arg.Timestamp, got.Timestamp, 0)
+			assert.Equal(t, tt.arg.Sensor, got.Sensor)
+			assert.Equal(t, tt.arg.Value, got.Value)
+			assert.Equal(t, tt.arg.Unit, got.Unit)
 		})
 	}
 }
@@ -120,8 +126,8 @@ var updateMeasurementTestCases = []struct {
 	wantMeasurement MeasurementDo
 	wantErr         bool
 }{
-	{"case 1", MeasurementDo{"", "t1", "s1", 1, "%"}, MeasurementDo{"", "t1", "s1", 1.2, "%"}, false},
-	{"case 2", MeasurementDo{"", "t1", "s1", 2, "%"}, MeasurementDo{"", "t1.1", "s1", 2.2, "%"}, false},
+	{"case 1", MeasurementDo{Timestamp: time.Date(2022, 3, 1, 10, 44, 48, 20, time.Local), Sensor: "s1", Value: 1, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 3, 1, 10, 44, 48, 20, time.Local), Sensor: "s1", Value: 1.2, Unit: "%"}, false},
+	{"case 2", MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 2, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 0.2, Unit: "%"}, false},
 }
 
 func TestUpdateMeasurement(t *testing.T) {
@@ -142,9 +148,11 @@ func TestUpdateMeasurement(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.wantMeasurement) {
-				t.Errorf("UpdateMeasurement() = %v, want %v", got, tt.wantMeasurement)
-			}
+			assert.Equal(t, tt.wantMeasurement.ID, got.ID)
+			assert.WithinDuration(t, tt.wantMeasurement.Timestamp, got.Timestamp, 0)
+			assert.Equal(t, tt.wantMeasurement.Sensor, got.Sensor)
+			assert.Equal(t, tt.wantMeasurement.Value, got.Value)
+			assert.Equal(t, tt.wantMeasurement.Unit, got.Unit)
 		})
 	}
 }

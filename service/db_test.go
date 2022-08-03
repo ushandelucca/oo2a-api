@@ -38,7 +38,7 @@ func (o *measurementMockDb) CreateMeasurement(m database.MeasurementDo) (entity 
 	return args.Get(0).(database.MeasurementDo), args.Error(1)
 }
 
-func (o *measurementMockDb) ReadMeasurement(id string) (entity database.MeasurementDo, err error) {
+func (o *measurementMockDb) ReadMeasurement(id uint) (entity database.MeasurementDo, err error) {
 	args := o.Called(id)
 	return args.Get(0).(database.MeasurementDo), args.Error(1)
 }
@@ -48,7 +48,7 @@ func (o *measurementMockDb) UpdateMeasurement(m database.MeasurementDo) (entity 
 	return args.Get(0).(database.MeasurementDo), args.Error(1)
 }
 
-func (o *measurementMockDb) DeleteMeasurement(id string) (err error) {
+func (o *measurementMockDb) DeleteMeasurement(id uint) (err error) {
 	args := o.Called(id)
 	return args.Error(0)
 }

@@ -1,12 +1,12 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"testing"
 
-	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 var testDB *measurementDB
@@ -21,7 +21,8 @@ func TestMain(m *testing.M) {
 }
 
 func run(m *testing.M) (code int, err error) {
-	db, err := sql.Open("sqlite3", "file:../test/test.db?cache=shared")
+	// db, err := sql.Open("sqlite3", "file:../test/test.db?cache=shared")
+	db, err := gorm.Open(sqlite.Open("../test/test.db"), &gorm.Config{})
 	if err != nil {
 		return -1, fmt.Errorf("could not connect to database: %w", err)
 	}
@@ -36,12 +37,12 @@ func run(m *testing.M) (code int, err error) {
 
 	// truncates all test data after the tests are run
 	defer func() {
-		for _, t := range []string{"measurements"} {
-			_, _ = testDB.db.Exec(fmt.Sprintf("DELETE FROM %s", t))
-			_, _ = testDB.db.Exec(fmt.Sprintf("DROP TABLE %s", t))
+		for _, t := range []string{"measurement_dos"} {
+			testDB.db.Exec(fmt.Sprintf("DELETE FROM %s", t))
+			testDB.db.Exec(fmt.Sprintf("DROP TABLE %s", t))
 		}
 
-		testDB.db.Close()
+		// testDB.db.Close()
 	}()
 
 	return m.Run(), nil
