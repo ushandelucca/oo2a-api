@@ -107,7 +107,7 @@ func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo
 		err = fmt.Errorf("update: %w", err)
 	}
 
-	return m, err
+	return entity, err
 }
 
 func (s *measurementDB) DeleteMeasurement(id uint) (err error) {
