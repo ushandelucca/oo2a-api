@@ -71,17 +71,29 @@ func (s *measurementDB) CreateMeasurement(m MeasurementDo) (entity MeasurementDo
 		return emptyMeasurement, err
 	}
 
-	s.db.Create(&m)
+	tx := s.db.Create(&m)
 
-	return m, nil
+	err = tx.Error
+
+	if err != nil {
+		err = fmt.Errorf("create: %w", err)
+	}
+
+	return m, err
 }
 
 func (s *measurementDB) ReadMeasurement(id uint) (entity MeasurementDo, err error) {
 	entity = MeasurementDo{}
 
-	s.db.First(&entity, "id = ?", id)
+	tx := s.db.First(&entity, "id = ?", id)
 
-	return entity, nil
+	err = tx.Error
+
+	if err != nil {
+		err = fmt.Errorf("read: %w", err)
+	}
+
+	return entity, err
 }
 
 func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
@@ -89,12 +101,24 @@ func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo
 	tx := s.db.First(&entity, "id = ?", m.ID)
 	tx.Model(entity).Updates(m)
 
-	return m, nil
+	err = tx.Error
+
+	if err != nil {
+		err = fmt.Errorf("update: %w", err)
+	}
+
+	return m, err
 }
 
 func (s *measurementDB) DeleteMeasurement(id uint) (err error) {
 	entity := MeasurementDo{}
-	s.db.First(&entity, "id = ?", id)
+	tx := s.db.First(&entity, "id = ?", id)
 
-	return nil
+	err = tx.Error
+
+	if err != nil {
+		err = fmt.Errorf("delete: %w", err)
+	}
+
+	return err
 }
