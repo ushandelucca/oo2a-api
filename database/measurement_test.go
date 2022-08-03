@@ -1,6 +1,7 @@
 package database
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -81,10 +82,6 @@ func TestReadMeasurement(t *testing.T) {
 				return
 			}
 
-			// if !reflect.DeepEqual(got, entity) {
-			// 	t.Errorf("ReadMeasurement() = %v, want %v", got, entity)
-			// }
-
 			assert.True(t, (tt.arg.ID != got.ID) != tt.wantErr)
 			assert.WithinDuration(t, tt.arg.Timestamp, got.Timestamp, 0)
 			assert.Equal(t, tt.arg.Sensor, got.Sensor)
@@ -111,11 +108,9 @@ func TestDeleteMeasurement(t *testing.T) {
 			got, err := testDB.ReadMeasurement(entity.ID)
 			require.NoError(t, err)
 
-			assert.True(t, (tt.arg.ID != got.ID) != tt.wantErr)
-			assert.WithinDuration(t, tt.arg.Timestamp, got.Timestamp, 0)
-			assert.Equal(t, tt.arg.Sensor, got.Sensor)
-			assert.Equal(t, tt.arg.Value, got.Value)
-			assert.Equal(t, tt.arg.Unit, got.Unit)
+			if !reflect.DeepEqual(got, emptyMeasurement) {
+				t.Errorf("DeleteMeasurement() = %v, want %v", got, emptyMeasurement)
+			}
 		})
 	}
 }

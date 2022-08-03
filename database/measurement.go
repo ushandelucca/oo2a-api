@@ -32,13 +32,18 @@ type MeasurementDB interface {
 	// will be defined within this function.
 	CreateMeasurement(m MeasurementDo) (entity MeasurementDo, err error)
 
-	// ReadMeasurement reads an measurement
+	// ReadMeasurement reads an measurement. When no record is found a empty struct
+	// will be returned.
 	ReadMeasurement(id uint) (entity MeasurementDo, err error)
+
+	// TODO comment
 	UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error)
+
+	// TODO comment
 	DeleteMeasurement(id uint) (err error)
 }
 
-// NewMeasurementDB returns the config object.
+// NewMeasurementDB returns the DB object.
 func NewMeasurementDB(config *utils.Conf) (db *measurementDB, err error) {
 
 	database, err := gorm.Open(sqlite.Open(config.DataSourceName), &gorm.Config{})
@@ -74,7 +79,6 @@ func (s *measurementDB) CreateMeasurement(m MeasurementDo) (entity MeasurementDo
 	tx := s.db.Create(&m)
 
 	err = tx.Error
-
 	if err != nil {
 		err = fmt.Errorf("create: %w", err)
 	}
@@ -84,12 +88,14 @@ func (s *measurementDB) CreateMeasurement(m MeasurementDo) (entity MeasurementDo
 
 func (s *measurementDB) ReadMeasurement(id uint) (entity MeasurementDo, err error) {
 	entity = MeasurementDo{}
-
 	tx := s.db.First(&entity, "id = ?", id)
 
 	err = tx.Error
-
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return emptyMeasurement, nil
+		}
+
 		err = fmt.Errorf("read: %w", err)
 	}
 
@@ -97,12 +103,10 @@ func (s *measurementDB) ReadMeasurement(id uint) (entity MeasurementDo, err erro
 }
 
 func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo, err error) {
-
 	tx := s.db.First(&entity, "id = ?", m.ID)
 	tx.Model(entity).Updates(m)
 
 	err = tx.Error
-
 	if err != nil {
 		err = fmt.Errorf("update: %w", err)
 	}
@@ -111,11 +115,9 @@ func (s *measurementDB) UpdateMeasurement(m MeasurementDo) (entity MeasurementDo
 }
 
 func (s *measurementDB) DeleteMeasurement(id uint) (err error) {
-	entity := MeasurementDo{}
-	tx := s.db.First(&entity, "id = ?", id)
+	tx := s.db.Delete(&MeasurementDo{}, id)
 
 	err = tx.Error
-
 	if err != nil {
 		err = fmt.Errorf("delete: %w", err)
 	}
