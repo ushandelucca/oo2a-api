@@ -4,11 +4,10 @@ package service
 import (
 	"MeasurementWeb/database"
 	"MeasurementWeb/utils"
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/rs/zerolog/log"
 )
 
 type Unit int
@@ -55,7 +54,7 @@ func NewManagementService(config *utils.Conf) *managementService {
 	db, err := database.NewMeasurementDB(config)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Err(err)
 		return nil
 	}
 
@@ -74,24 +73,12 @@ func (s *managementService) InitMeasurement() (err error) {
 func (s *managementService) SaveMeasurement(transferObject MeasurementDto) (err error) {
 	validate := validator.New()
 	err = validate.Struct(transferObject)
+
 	if err != nil {
-
-		// this check is only needed when your code could produce
-		// an invalid value for validation such as interface with nil
-		// value most including myself do not usually have code like this.
-		if _, ok := err.(*validator.InvalidValidationError); ok {
-			fmt.Println(err)
-			return
-		}
-
 		for _, err := range err.(validator.ValidationErrors) {
-
-			fmt.Println(err)
-			fmt.Println()
+			log.Info().Err(err).Msg("validation")
 		}
-
-		// from here you can create your own error messages in whatever language you wish
-		return
+		return err
 	}
 
 	dataObject := database.MeasurementDo{}

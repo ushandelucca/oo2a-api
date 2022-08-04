@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -16,6 +18,8 @@ var mockDB *measurementMockDb
 var testService *managementService
 
 func TestMain(m *testing.M) {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
 	// prepare
 	mockDB = &measurementMockDb{}
 	testService = &managementService{db: mockDB}
