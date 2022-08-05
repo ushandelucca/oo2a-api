@@ -3,7 +3,10 @@ package service
 
 import (
 	"MeasurementWeb/database"
+	"errors"
 	"testing"
+
+	"github.com/go-playground/validator/v10"
 )
 
 var validationsTests = []struct {
@@ -22,6 +25,17 @@ func TestSaveNewMeasurementValidations(t *testing.T) {
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("managementService.SaveMeasurement() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			var errs []string
+			if err != nil {
+				var valErrs validator.ValidationErrors
+				if errors.As(err, &valErrs) {
+					for i, e := range err.(validator.ValidationErrors) {
+						i++
+						errs = append(errs, e.Error())
+					}
+				}
 			}
 
 			mockDB.AssertExpectations(t)
