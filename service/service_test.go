@@ -24,6 +24,13 @@ func TestSaveNewMeasurementValidations(t *testing.T) {
 				t.Errorf("managementService.SaveMeasurement() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
+			// if err != nil {
+			// 	for _, err := range err.(validator.ValidationErrors) {
+			// 		log.Info().Err(err).Msg("validation")
+			// 	}
+			// 	return err
+			// }
+
 			mockDB.AssertExpectations(t)
 		})
 	}

@@ -81,6 +81,17 @@ func (s *managementService) SaveMeasurement(transferObject MeasurementDto) (err 
 		return err
 	}
 
+	// https://github.com/go-playground/validator/issues/559
+	//
+	// var ve validator.ValidationErrors
+	// if errors.As(err, &ve) {
+	// 	out := make([]ApiError, len(ve))
+	// 	for i, fe := range ve {
+	// 		out[i] = ApiError{fe.Field(), msgForTag(fe)}
+	// 	}
+	// 	c.JSON(http.StatusBadRequest, gin.H{"errors": out})
+	// }
+
 	dataObject := database.MeasurementDo{}
 	dataObject.ID = transferObject.ID
 	dataObject.Timestamp = transferObject.Timestamp
