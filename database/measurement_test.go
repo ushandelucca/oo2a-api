@@ -36,7 +36,7 @@ var createMeasurementTestCases = []struct {
 	wantMeasurement MeasurementDo
 	wantErr         bool
 }{
-	{"case 1", MeasurementDo{Timestamp: time.Date(2022, 01, 1, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: .3, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 01, 1, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: .3, Unit: "%"}, false},
+	{"test 1", MeasurementDo{Timestamp: time.Date(2022, 01, 1, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: .3, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 01, 1, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: .3, Unit: "%"}, false},
 	{"error when id", MeasurementDo{ID: 1, Timestamp: time.Date(2022, 01, 2, 10, 44, 48, 120, time.Local), Sensor: "s1", Value: 1.3, Unit: "%"}, MeasurementDo{}, true},
 }
 
@@ -64,8 +64,8 @@ var readDeleteTestCases = []struct {
 	arg     MeasurementDo
 	wantErr bool
 }{
-	{"case 1", MeasurementDo{Timestamp: time.Date(2022, 02, 1, 10, 44, 48, 1, time.Local), Sensor: "s1", Value: 1.3, Unit: "%"}, false},
-	{"case 2", MeasurementDo{Timestamp: time.Date(2022, 02, 2, 10, 44, 48, 2, time.Local), Sensor: "s1", Value: 2.1, Unit: "%"}, false},
+	{"test 1", MeasurementDo{Timestamp: time.Date(2022, 02, 1, 10, 44, 48, 1, time.Local), Sensor: "s1", Value: 1.3, Unit: "%"}, false},
+	{"test 2", MeasurementDo{Timestamp: time.Date(2022, 02, 2, 10, 44, 48, 2, time.Local), Sensor: "s1", Value: 2.1, Unit: "%"}, false},
 }
 
 func TestReadMeasurement(t *testing.T) {
@@ -121,8 +121,8 @@ var updateMeasurementTestCases = []struct {
 	wantMeasurement MeasurementDo
 	wantErr         bool
 }{
-	{"case 1", MeasurementDo{Timestamp: time.Date(2022, 3, 1, 10, 44, 48, 20, time.Local), Sensor: "s1", Value: 1, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 3, 1, 10, 44, 48, 20, time.Local), Sensor: "s1", Value: 1.2, Unit: "%"}, false},
-	{"case 2", MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 2, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 0.2, Unit: "%"}, false},
+	{"test 1", MeasurementDo{Timestamp: time.Date(2022, 3, 1, 10, 44, 48, 20, time.Local), Sensor: "s1", Value: 1, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 3, 1, 10, 44, 48, 20, time.Local), Sensor: "s1", Value: 1.2, Unit: "%"}, false},
+	{"test 2", MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 2, Unit: "%"}, MeasurementDo{Timestamp: time.Date(2022, 3, 2, 10, 44, 48, 21, time.Local), Sensor: "s1", Value: 0.2, Unit: "%"}, false},
 }
 
 // TODO test case for no rows affected
